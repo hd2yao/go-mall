@@ -1,6 +1,8 @@
 package config
 
 import (
+    "bytes"
+    "embed"
     "os"
     "time"
 
@@ -11,18 +13,21 @@ import (
  * 加载配置文件，把配置解析到配置对象中
  */
 
-const CONF_DIR = "config/"
+// 嵌入文件只能写在 embed 指令的 Go 文件的同级目录或者子目录中
+//go:embed *.yaml
+var configs embed.FS
 
 func init() {
     env := os.Getenv("ENV")
     vp := viper.New()
     // 根据环境变量 ENV 决定要读取的应用启动配置
-    configFilePath := CONF_DIR + "application.yaml"
-    if env != "" {
-        configFilePath = CONF_DIR + "application." + env + ".yaml"
+    configFileStream, err := configs.ReadFile("application." + env + ".yaml")
+    if err != nil {
+        panic(err)
     }
-    vp.SetConfigFile(configFilePath)
-    err := vp.ReadInConfig() // 查找并读取配置文件
+
+    vp.SetConfigType("yaml")
+    err = vp.ReadConfig(bytes.NewBuffer(configFileStream))
     if err != nil {
         panic(err)
     }
