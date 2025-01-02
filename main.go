@@ -4,6 +4,8 @@ import (
     "net/http"
 
     "github.com/gin-gonic/gin"
+
+    "github.com/hd2yao/go-mall/config"
 )
 
 func main() {
@@ -13,5 +15,14 @@ func main() {
             "message": "pong",
         })
     })
+
+    r.GET("/config-read", func(c *gin.Context) {
+        database := config.Database
+        c.JSON(http.StatusOK, gin.H{
+            "type":     database.Type,
+            "max_life": database.MaxLifeTime,
+        })
+    })
+
     r.Run()
 }
