@@ -3,6 +3,12 @@ package middleware
 import (
     "bytes"
     "io"
+    "net"
+    "net/http"
+    "net/http/httputil"
+    "os"
+    "runtime/debug"
+    "strings"
     "time"
 
     "github.com/gin-gonic/gin"
@@ -110,4 +116,44 @@ func accessLog(c *gin.Context, accessType string, dur time.Duration, dataOut int
         "body", bodyStr,
         "output", dataOut,
         "time(ms)", int64(dur/time.Millisecond))
+}
+
+// GinPanicRecovery 自定义 gin recovery 输出中间件
+func GinPanicRecovery() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        defer func() {
+            if err := recover(); err != nil {
+                // Broken Pipe 错误通常不需要记录完整的堆栈信息，因为是客户端的连接问题：
+                // 客户端主动断开（网络不稳定、用户终止请求等）
+                // 客户端的连接被代理、网关等中间设备关闭
+                var brokenPipe bool
+                if ne, ok := err.(*net.OpError); ok { // net.OpError: 网络操作错误
+                    if se, ok := ne.Err.(*os.SyscallError); ok { // os.SyscallError: 系统调用错误
+                        if strings.Contains(strings.ToLower(se.Error()), "broken pipe") || strings.Contains(strings.ToLower(se.Error()), "connection reset by peer") {
+                            brokenPipe = true
+                        }
+                    }
+                }
+
+                // 使用 httputil.DumpRequest 记录 HTTP 请求的关键信息，支持打印请求的头部信息、方法、路径等
+                // DumpRequest 的第二个参数设置为 false，表示不记录请求体，避免可能的数据泄露
+                httpRequest, _ := httputil.DumpRequest(c.Request, false)
+
+                // Broken Pipe 错误处理
+                if brokenPipe {
+                    logger.New(c).Error("http request broken pipe", "path", c.Request.URL.Path, "error", err, "request", string(httpRequest))
+                    // If the connection is dead, we can't write a status to it.
+                    c.Error(err.(error)) // nolint: errcheck
+                    c.Abort()
+                    return
+                }
+
+                // 非 Broken Pipe 错误处理
+                // 记录完整的堆栈信息
+                logger.New(c).Error("http_request_panic", "path", c.Request.URL.Path, "error", err, "request", string(httpRequest), "stack", string(debug.Stack()))
+                c.AbortWithError(http.StatusInternalServerError, err.(error))
+            }
+        }()
+        c.Next()
+    }
 }
