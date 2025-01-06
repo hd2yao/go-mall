@@ -64,7 +64,7 @@ func LogAccess() gin.HandlerFunc {
         // go 1.16 之前使用 ioutil.ReadAll() 和 ioutil.NopCloser(), go 1.16 之后废弃
         // 现在使用 io.ReadAll() 和 io.NopCloser() 替换
         // 对于较大的请求体可能会导致内存消耗过高，可以设置最大读取大小
-        // TODO: 优化，把 body 保存到 context 中，而不是每次都重新读取
+        // TODO:优化，把 body 保存到 context 中，而不是每次都重新读取
         // 尝试从 context 中获取 body，如果不存在则保存到 context 中
         if _, exists := c.Get("reqBody"); !exists {
             // 请求体未保存，读取并存储到 context
@@ -97,7 +97,7 @@ func accessLog(c *gin.Context, accessType string, dur time.Duration, dataOut int
     bodyStr := string(body.([]byte))
     query := req.URL.RawQuery
     path := req.URL.Path
-    // TODO: 实现 Token 认证后再把访问日志里也加上 token 记录
+    // TODO:实现 Token 认证后再把访问日志里也加上 token 记录
     // token := c.Request.Header.Get("token")
 
     logger.New(c).Info("AccessLog",
