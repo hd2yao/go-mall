@@ -8,5 +8,5 @@ type response struct {
     Msg        string      `json:"msg"`
     RequestId  string      `json:"request_id"`
     Data       interface{} `json:"data,omitempty"`
-    Pagination *Pagination `json:"pagination,omitempty"`
+    Pagination *pagination `json:"pagination,omitempty"`
 }

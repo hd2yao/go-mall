@@ -8,13 +8,13 @@ import (
     "github.com/hd2yao/go-mall/config"
 )
 
-type Pagination struct {
+type pagination struct {
     Page      int `json:"page"`
     PageSize  int `json:"page_size"`
     TotalRows int `json:"total_rows"`
 }
 
-func NewPagination(c *gin.Context) *Pagination {
+func NewPagination(c *gin.Context) *pagination {
     page, _ := strconv.Atoi(c.Query("page"))
     if page < 1 {
         page = 1
@@ -26,5 +26,21 @@ func NewPagination(c *gin.Context) *Pagination {
     if pageSize > config.App.Pagination.MaxSize {
         pageSize = config.App.Pagination.MaxSize
     }
-    return &Pagination{Page: page, PageSize: pageSize}
+    return &pagination{Page: page, PageSize: pageSize}
+}
+
+func (p *pagination) GetPage() int {
+    return p.Page
+}
+
+func (p *pagination) GetPageSize() int {
+    return p.PageSize
+}
+
+func (p *pagination) SetTotalRows(total int) {
+    p.TotalRows = total
+}
+
+func (p *pagination) Offset() int {
+    return (p.Page - 1) * p.PageSize
 }
