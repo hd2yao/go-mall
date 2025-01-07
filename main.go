@@ -6,6 +6,7 @@ import (
 
     "github.com/gin-gonic/gin"
 
+    "github.com/hd2yao/go-mall/common/app"
     "github.com/hd2yao/go-mall/common/errcode"
     "github.com/hd2yao/go-mall/common/logger"
     "github.com/hd2yao/go-mall/common/middleware"
@@ -77,6 +78,21 @@ func main() {
             "msg":  apiErr.Msg(),
         })
 
+    })
+
+    g.GET("/response-obj", func(c *gin.Context) {
+        data := map[string]int{
+            "a": 1,
+            "b": 2,
+        }
+        app.NewResponse(c).Success(data)
+    })
+
+    g.GET("/response-error", func(c *gin.Context) {
+        baseErr := errors.New("a base error")
+        // 这一步正式开发时写在 service 层
+        err := errcode.Wrap("encountered an error when xxx service did xxx", baseErr)
+        app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
     })
 
     g.Run()
