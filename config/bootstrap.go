@@ -4,7 +4,6 @@ import (
     "bytes"
     "embed"
     "os"
-    "time"
 
     "github.com/spf13/viper"
 )
@@ -14,6 +13,7 @@ import (
  */
 
 // 嵌入文件只能写在 embed 指令的 Go 文件的同级目录或者子目录中
+//
 //go:embed *.yaml
 var configs embed.FS
 
@@ -34,5 +34,4 @@ func init() {
     vp.UnmarshalKey("app", &App)
 
     vp.UnmarshalKey("database", &Database)
-    Database.MaxLifeTime *= time.Second
 }
