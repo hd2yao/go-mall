@@ -95,5 +95,26 @@ func main() {
         app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
     })
 
+    g.GET("/response-list", func(c *gin.Context) {
+        pagination := app.NewPagination(c)
+        // Mock fetch list data from db
+        data := []struct {
+            Name string `json:"name"`
+            Age  int    `json:"age"`
+        }{
+            {
+                Name: "Tom",
+                Age:  18,
+            },
+            {
+                Name: "Jerry",
+                Age:  20,
+            },
+        }
+        pagination.SetTotalRows(2)
+        app.NewResponse(c).SetPagination(pagination).Success(data)
+        return
+    })
+
     g.Run()
 }
