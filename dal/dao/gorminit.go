@@ -31,7 +31,11 @@ func init() {
 }
 
 func initDB(option config.DbConnectOption) *gorm.DB {
-    db, err := gorm.Open(mysql.Open(option.DSN), &gorm.Config{})
+    db, err := gorm.Open(
+        mysql.Open(option.DSN),
+        &gorm.Config{ // 替换成本项目实现的 gormLogger
+            Logger: NewGormLogger(),
+        })
     if err != nil {
         panic(err)
     }
