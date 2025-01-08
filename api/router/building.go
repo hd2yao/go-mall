@@ -27,4 +27,6 @@ func registerBuildingRoute(rg *gin.RouterGroup) {
 	g.GET("response-list", controller.TestResponseList)
 	// 测试统一响应--返回错误
 	g.GET("response-error", controller.TestResponseError)
+	// 测试 GORM Logger
+	g.GET("gorm-logger-test", controller.TestGormLogger)
 }
