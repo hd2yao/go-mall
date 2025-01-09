@@ -2,6 +2,7 @@ package domainservice
 
 import (
     "context"
+    "fmt"
 
     "github.com/hd2yao/go-mall/common/errcode"
     "github.com/hd2yao/go-mall/common/util"
@@ -32,8 +33,10 @@ func (dds *DemoDomainSvc) GetDemos() ([]*do.DemoOrder, error) {
 
     demoOrders := make([]*do.DemoOrder, 0, len(demos))
     for _, demo := range demos {
+        fmt.Println(demo)
         demoOrder := new(do.DemoOrder)
         err = util.CopyProperties(demoOrder, demo)
+        fmt.Println(demoOrder)
         if err != nil {
             err = errcode.Wrap("copy properties error", err)
             return nil, err
@@ -41,4 +44,19 @@ func (dds *DemoDomainSvc) GetDemos() ([]*do.DemoOrder, error) {
         demoOrders = append(demoOrders, demoOrder)
     }
     return demoOrders, nil
+}
+
+func (dds *DemoDomainSvc) CreateDemoOrder(demoOrder *do.DemoOrder) (*do.DemoOrder, error) {
+    // 生成订单号
+    demoOrder.OrderNo = "20240627596615375920904456"
+    demoOrderModel, err := dds.DemoDao.CreateDemoOrder(demoOrder)
+    if err != nil {
+        err = errcode.Wrap("create demo order error", err)
+        return nil, err
+    }
+    // TODO: 写订单快照
+    // 这里一般要在事务里写订单商品快照表
+    err = util.CopyProperties(demoOrder, demoOrderModel)
+    // 返回 domain 对象
+    return demoOrder, err
 }

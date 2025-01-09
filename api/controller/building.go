@@ -6,6 +6,7 @@ import (
 
     "github.com/gin-gonic/gin"
 
+    "github.com/hd2yao/go-mall/api/request"
     "github.com/hd2yao/go-mall/common/app"
     "github.com/hd2yao/go-mall/common/errcode"
     "github.com/hd2yao/go-mall/common/logger"
@@ -124,4 +125,24 @@ func TestGormLogger(c *gin.Context) {
     }
     app.NewResponse(c).Success(list)
     return
+}
+
+func TestCreateDemoOrder(c *gin.Context) {
+    request := new(request.DemoOrderCreate)
+    err := c.ShouldBind(request)
+    if err != nil {
+        app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
+        return
+    }
+
+    // 验证用户信息 Token 然后把 UserID 赋值上去
+    request.UserId = 123453453
+    svc := appservice.NewDemoAppSvc(c)
+    reply, err := svc.CreateDemoOrders(request)
+    if err != nil {
+        app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+        return
+    }
+
+    app.NewResponse(c).Success(reply)
 }
