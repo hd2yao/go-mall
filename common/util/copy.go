@@ -10,7 +10,8 @@ import (
 )
 
 // CopyProperties 将 src(源对象) 的属性复制到 dst(目标对象)
-func CopyProperties(src, dst interface{}) error {
+// 注意：dst 和 src 必须是结构体指针类型
+func CopyProperties(dst, src interface{}) error {
     err := copier.CopyWithOption(dst, src, copier.Option{
         IgnoreEmpty: true, // 忽略空值，如果源对象的字段值为空，目标对象相应字段不会被覆盖
         DeepCopy:    true, // 深拷贝
