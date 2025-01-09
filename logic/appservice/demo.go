@@ -6,7 +6,9 @@ import (
 	"github.com/hd2yao/go-mall/api/reply"
 	"github.com/hd2yao/go-mall/api/request"
 	"github.com/hd2yao/go-mall/common/errcode"
+	"github.com/hd2yao/go-mall/common/logger"
 	"github.com/hd2yao/go-mall/common/util"
+	"github.com/hd2yao/go-mall/dal/cache"
 	"github.com/hd2yao/go-mall/logic/do"
 	"github.com/hd2yao/go-mall/logic/domainservice"
 )
@@ -51,6 +53,10 @@ func (das *DemoAppSvc) CreateDemoOrders(orderRequest *request.DemoOrderCreate) (
 
 	// 做一些其他的创建订单成功后的外围逻辑
 	// 比如异步发送创建订单创建通知
+	// 设置缓存和读取，测试项目中缓存的使用，没有其他任何意义
+	cache.SetDemoOrder(das.ctx, demoOrderDo)
+	cacheData, _ := cache.GetDemoOrder(das.ctx, demoOrderDo.OrderNo)
+	logger.New(das.ctx).Info("redis data", "data", cacheData)
 
 	replyDemoOrder := new(reply.DemoOrder)
 	err = util.CopyProperties(replyDemoOrder, demoOrder)
