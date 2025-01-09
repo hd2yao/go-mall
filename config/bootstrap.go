@@ -1,11 +1,11 @@
 package config
 
 import (
-    "bytes"
-    "embed"
-    "os"
+	"bytes"
+	"embed"
+	"os"
 
-    "github.com/spf13/viper"
+	"github.com/spf13/viper"
 )
 
 /**
@@ -18,20 +18,22 @@ import (
 var configs embed.FS
 
 func init() {
-    env := os.Getenv("ENV")
-    vp := viper.New()
-    // 根据环境变量 ENV 决定要读取的应用启动配置
-    configFileStream, err := configs.ReadFile("application." + env + ".yaml")
-    if err != nil {
-        panic(err)
-    }
+	env := os.Getenv("ENV")
+	vp := viper.New()
+	// 根据环境变量 ENV 决定要读取的应用启动配置
+	configFileStream, err := configs.ReadFile("application." + env + ".yaml")
+	if err != nil {
+		panic(err)
+	}
 
-    vp.SetConfigType("yaml")
-    err = vp.ReadConfig(bytes.NewBuffer(configFileStream))
-    if err != nil {
-        panic(err)
-    }
-    vp.UnmarshalKey("app", &App)
+	vp.SetConfigType("yaml")
+	err = vp.ReadConfig(bytes.NewBuffer(configFileStream))
+	if err != nil {
+		panic(err)
+	}
+	vp.UnmarshalKey("app", &App)
 
-    vp.UnmarshalKey("database", &Database)
+	vp.UnmarshalKey("database", &Database)
+
+	vp.UnmarshalKey("redis", &Redis)
 }
