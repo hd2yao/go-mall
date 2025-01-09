@@ -2,7 +2,6 @@ package domainservice
 
 import (
     "context"
-    "fmt"
 
     "github.com/hd2yao/go-mall/common/errcode"
     "github.com/hd2yao/go-mall/common/util"
@@ -33,10 +32,8 @@ func (dds *DemoDomainSvc) GetDemos() ([]*do.DemoOrder, error) {
 
     demoOrders := make([]*do.DemoOrder, 0, len(demos))
     for _, demo := range demos {
-        fmt.Println(demo)
         demoOrder := new(do.DemoOrder)
         err = util.CopyProperties(demoOrder, demo)
-        fmt.Println(demoOrder)
         if err != nil {
             err = errcode.Wrap("copy properties error", err)
             return nil, err
