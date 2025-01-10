@@ -22,8 +22,8 @@ import (
 // StartTrace 代码追踪中间件
 func StartTrace() gin.HandlerFunc {
     return func(c *gin.Context) {
-        traceId := c.Request.Header.Get("traceid")
-        pSpanId := c.Request.Header.Get("spanid")
+        traceId := c.Request.Header.Get("traceId")
+        pSpanId := c.Request.Header.Get("spanId")
         spanId := util.GenerateSpanID(c.Request.RemoteAddr)
 
         // 如果 traceId 为空，证明是链路的发端，把它设置成此次的 spanId
