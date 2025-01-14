@@ -68,7 +68,7 @@ func DelOldSessionTokens(ctx context.Context, session *do.SessionInfo) error {
 		return err
 	}
 	// 没有旧的 Session
-	if oldSession != nil {
+	if oldSession == nil {
 		return nil
 	}
 	err = DelAccessToken(ctx, oldSession.AccessToken)
