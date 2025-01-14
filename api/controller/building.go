@@ -165,3 +165,19 @@ func TestForHttpToolPost(c *gin.Context) {
 	}
 	app.NewResponse(c).Success(orderReply)
 }
+
+func TestMakeToken(c *gin.Context) {
+	userSvc := appservice.NewUserAppSvc(c)
+	token, err := userSvc.GenToken()
+	if err != nil {
+		if errors.Is(err, errcode.ErrUserInvalid) {
+			logger.New(c).Error("invalid user is unable to generate token", err)
+			app.NewResponse(c).Error(errcode.ErrUserInvalid)
+		} else {
+			appErr := err.(*errcode.AppError)
+			app.NewResponse(c).Error(appErr)
+		}
+		return
+	}
+	app.NewResponse(c).Success(token)
+}

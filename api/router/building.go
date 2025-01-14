@@ -34,4 +34,6 @@ func registerBuildingRoute(rg *gin.RouterGroup) {
 	// 测试封装的 httptool
 	g.GET("httptool-get-test", controller.TestForHttpToolGet)
 	g.GET("httptool-post-test", controller.TestForHttpToolPost)
+	// 测试Token生成 - 后面有登录功能后会删掉, token在登录时生成
+	g.GET("token-make-test", controller.TestMakeToken)
 }
