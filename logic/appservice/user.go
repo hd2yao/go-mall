@@ -31,8 +31,23 @@ func (us *UserAppSvc) GenToken() (*reply.TokenReply, error) {
 	tokenReply := new(reply.TokenReply)
 	err = util.CopyProperties(tokenReply, token)
 	if err != nil {
-		err = errcode.Wrap("请求转换成 demoOrderDo 失败", err)
+		err = errcode.Wrap("请求转换成 TokenReply 失败", err)
 		return nil, err
 	}
 	return tokenReply, nil
+}
+
+func (us *UserAppSvc) TokenRefresh(refreshToken string) (*reply.TokenReply, error) {
+	token, err := us.userDomainSvc.RefreshToken(refreshToken)
+	if err != nil {
+		return nil, err
+	}
+	logger.New(us.ctx).Info("refresh token success", "tokenData", token)
+	tokenReply := new(reply.TokenReply)
+	err = util.CopyProperties(tokenReply, token)
+	if err != nil {
+		err = errcode.Wrap("请求转换成 TokenReply 失败", err)
+		return nil, err
+	}
+	return tokenReply, err
 }

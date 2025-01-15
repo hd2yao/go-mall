@@ -6,6 +6,7 @@ import (
 
 	"github.com/hd2yao/go-mall/common/enum"
 	"github.com/hd2yao/go-mall/common/errcode"
+	"github.com/hd2yao/go-mall/common/logger"
 	"github.com/hd2yao/go-mall/common/util"
 	"github.com/hd2yao/go-mall/dal/cache"
 	"github.com/hd2yao/go-mall/logic/do"
@@ -85,6 +86,62 @@ func (us *UserDomainSvc) GetAuthToken(userId int64, platform string, sessionId s
 		RefreshToken:  userSession.RefreshToken,
 		Duration:      int64(enum.AccessTokenDuration.Seconds()),
 		SrvCreateTime: srvCreateTime,
+	}
+	return tokenInfo, nil
+}
+
+func (us *UserDomainSvc) RefreshToken(refreshToken string) (*do.TokenInfo, error) {
+	log := logger.New(us.ctx)
+	// 获取锁以防止并发刷新
+	ok, err := cache.LockTokenRefresh(us.ctx, refreshToken)
+	defer cache.UnLockTokenRefresh(us.ctx, refreshToken)
+	if err != nil {
+		err = errcode.Wrap("刷新 Token 时设置 redis 锁发生错误", err)
+		return nil, err
+	}
+	if !ok {
+		err = errcode.ErrTooManyRequests
+		return nil, err
+	}
+
+	// 获取 refreshToken 对应的缓存
+	tokenSession, err := cache.GetRefreshToken(us.ctx, refreshToken)
+	if err != nil {
+		log.Error("GetRefreshTokenCacheErr", "err", err)
+		// 服务端发生错误一律提示客户端 Token 有问题
+		// 生产环境可以做好监控日志中这个错误的监控
+		err = errcode.ErrToken
+		return nil, err
+	}
+
+	// refreshToken 没有对应的缓存
+	if tokenSession == nil || tokenSession.UserId == 0 {
+		err = errcode.ErrToken
+		return nil, err
+	}
+
+	// 获取用户在指定平台中的 Session 信息
+	userSession, err := cache.GetUserPlatformSession(us.ctx, tokenSession.UserId, tokenSession.Platform)
+	if err != nil {
+		log.Error("GetUserPlatformSessionErr", "err", err)
+		err = errcode.ErrToken
+		return nil, err
+	}
+	// 请求刷新的 refreshToken 和缓存中的 refreshToken 不一致，证明这个 refreshToken 已经过时
+	// RefreshToken 被窃取或者前端页面刷 Token 不是串行的互斥操作都有可能造成这个情况
+	if userSession.RefreshToken != refreshToken {
+		// 记一条警告日志
+		log.Warn("ExpiredRefreshToken", "requestToken", refreshToken, "newToken", userSession.RefreshToken, "userId", userSession.UserId)
+		// 错误返回 Token 不正确，或者更精细化的错误提示：已在xxx登录，如不是您本人操作请xxx
+		err = errcode.ErrToken
+		return nil, err
+	}
+
+	// 重新生成 Token 因为不是用户主动登录所以 sessionId 与之前保持一致
+	tokenInfo, err := us.GetAuthToken(tokenSession.UserId, tokenSession.Platform, tokenSession.SessionId)
+	if err != nil {
+		err = errcode.Wrap("GenAuthTokenErr", err)
+		return nil, err
 	}
 	return tokenInfo, nil
 }
