@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/hd2yao/go-mall/api/controller"
+	"github.com/hd2yao/go-mall/common/middleware"
 )
 
 // 存放 User 模块的路由
@@ -14,4 +15,6 @@ func registerUserRoutes(rg *gin.RouterGroup) {
 	g.POST("register", controller.RegisterUser)
 	// 登录
 	g.POST("login", controller.LoginUser)
+	// 登出用户
+	g.DELETE("logout", middleware.AuthUser(), controller.LogoutUser)
 }

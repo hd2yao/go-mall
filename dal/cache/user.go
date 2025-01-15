@@ -104,6 +104,29 @@ func GetUserPlatformSession(ctx context.Context, userId int64, platform string) 
 	return session, nil
 }
 
+// GerUserAllSessions 获取用户所有平台的 Session 信息
+func GerUserAllSessions(ctx context.Context, userId int64) (map[string]*do.SessionInfo, error) {
+	redisKsy := fmt.Sprintf(enum.REDIS_KEY_USER_SESSION, userId)
+	result, err := Redis().HGetAll(ctx, redisKsy).Result()
+	if err != nil && err != redis.Nil {
+		return nil, err
+	}
+	// key 不存在
+	if errors.Is(err, redis.Nil) {
+		return nil, nil
+	}
+	sessions := make(map[string]*do.SessionInfo)
+	for platform, sessionData := range result {
+		session := new(do.SessionInfo)
+		err = json.Unmarshal([]byte(sessionData), &session)
+		if err != nil {
+			return nil, err
+		}
+		sessions[platform] = session
+	}
+	return sessions, nil
+}
+
 // DelAccessToken 删除 AccessToken 缓存
 func DelAccessToken(ctx context.Context, accessToken string) error {
 	redisKey := fmt.Sprintf(enum.REDIS_KEY_ACCESS_TOKEN, accessToken)
@@ -119,6 +142,18 @@ func DelayDelRefreshToken(ctx context.Context, refreshToken string) error {
 // DelRefreshToken 直接删除 RefreshToken 缓存(修改密码、退出登录时使用)
 func DelRefreshToken(ctx context.Context, refreshToken string) error {
 	redisKey := fmt.Sprintf(enum.REDIS_KEY_REFRESH_TOKEN, refreshToken)
+	return Redis().Del(ctx, redisKey).Err()
+}
+
+// DelUserSessionOnPlatform 删除用户在指定平台中的 Session
+func DelUserSessionOnPlatform(ctx context.Context, userId int64, platform string) error {
+	redisKey := fmt.Sprintf(enum.REDIS_KEY_USER_SESSION, userId)
+	return Redis().HDel(ctx, redisKey, platform).Err()
+}
+
+// DelUserSession 删除用户在全平台的 Session 缓存
+func DelUserSession(ctx context.Context, userId int64) error {
+	redisKey := fmt.Sprintf(enum.REDIS_KEY_USER_SESSION, userId)
 	return Redis().Del(ctx, redisKey).Err()
 }
 

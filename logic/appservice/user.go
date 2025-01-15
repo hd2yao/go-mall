@@ -92,3 +92,8 @@ func (us *UserAppSvc) UserLogin(userLoginReq *request.UserLogin) (*reply.TokenRe
 	// TODO: 执行用户登录成功后发送消息通知之类的外围辅助类逻辑
 	return tokenReply, err
 }
+
+func (us *UserAppSvc) UserLogout(userId int64, platform string) error {
+	err := us.userDomainSvc.LogoutUser(userId, platform)
+	return err
+}

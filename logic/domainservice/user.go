@@ -225,3 +225,33 @@ func (us *UserDomainSvc) LoginUser(loginName string, plainPassword, platform str
 	tokenInfo, err := us.GetAuthToken(existedUser.ID, platform, "")
 	return tokenInfo, err
 }
+
+func (us *UserDomainSvc) LogoutUser(userId int64, platform string) error {
+	log := logger.New(us.ctx)
+	userSession, err := cache.GetUserPlatformSession(us.ctx, userId, platform)
+	if err != nil {
+		log.Error("LogoutUserError", "err", err)
+		return errcode.Wrap("UserDomainSvcLogoutUserError", err)
+	}
+
+	// 删除用户的 AccessToken 和 RefreshToken
+	err = cache.DelAccessToken(us.ctx, userSession.AccessToken)
+	if err != nil {
+		log.Error("LogoutUserError", "err", err)
+		return errcode.Wrap("UserDomainSvcLogoutUserError", err)
+	}
+	err = cache.DelRefreshToken(us.ctx, userSession.RefreshToken)
+	if err != nil {
+		log.Error("LogoutUserError", "err", err)
+		return errcode.Wrap("UserDomainSvcLogoutUserError", err)
+	}
+
+	// 删除用户在对应平台的 Session
+	err = cache.DelUserSessionOnPlatform(us.ctx, userId, platform)
+	if err != nil {
+		log.Error("LogoutUserError", "err", err)
+		return errcode.Wrap("UserDomainSvcLogoutUserError", err)
+	}
+
+	return nil
+}

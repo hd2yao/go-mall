@@ -73,3 +73,18 @@ func LoginUser(c *gin.Context) {
 	app.NewResponse(c).Success(token)
 	return
 }
+
+func LogoutUser(c *gin.Context) {
+	// 通过中间件从 token 中获取用户信息，并设置到 context 中
+	userId := c.GetInt64("user_id")
+	platform := c.GetString("platform")
+	userSvc := appservice.NewUserAppSvc(c)
+	err := userSvc.UserLogout(userId, platform)
+	if err != nil {
+		app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		return
+	}
+
+	app.NewResponse(c).SuccessOk()
+	return
+}
