@@ -11,6 +11,8 @@ import (
 func registerUserRoutes(rg *gin.RouterGroup) {
 	// 这个路由组中的路由都以 /user 开头
 	g := rg.Group("/user")
+	// 刷新Token
+	g.GET("token/refresh", controller.RefreshUserToken)
 	// 注册用户
 	g.POST("register", controller.RegisterUser)
 	// 登录
