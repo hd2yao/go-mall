@@ -63,6 +63,7 @@ func SetUserSession(ctx context.Context, session *do.SessionInfo) error {
 
 // DelOldSessionTokens 删除用户旧 Session 的 Token
 func DelOldSessionTokens(ctx context.Context, session *do.SessionInfo) error {
+	// 根据 userId 和 platform 来查询 Session 缓存
 	oldSession, err := GetUserPlatformSession(ctx, session.UserId, session.Platform)
 	if err != nil {
 		return err
@@ -71,10 +72,12 @@ func DelOldSessionTokens(ctx context.Context, session *do.SessionInfo) error {
 	if oldSession == nil {
 		return nil
 	}
+	// 删除旧的 AccessToken
 	err = DelAccessToken(ctx, oldSession.AccessToken)
 	if err != nil {
 		return errcode.Wrap("redis error", err)
 	}
+	// 旧的 RefreshToken 设置过期时间后删除
 	err = DelayDelRefreshToken(ctx, oldSession.RefreshToken)
 	if err != nil {
 		return errcode.Wrap("redis error", err)

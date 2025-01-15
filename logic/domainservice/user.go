@@ -40,6 +40,7 @@ func (us *UserDomainSvc) GetUserBaseInfo(userId int64) *do.UserBaseInfo {
 func (us *UserDomainSvc) GetAuthToken(userId int64, platform string, sessionId string) (*do.TokenInfo, error) {
 	// 获取用户基本信息
 	user := us.GetUserBaseInfo(userId)
+	// 确认是否为有效用户
 	// 处理异常情况：用户不存在、被删除、被禁用
 	if user.ID == 0 || user.IsBlocked == enum.UserBlockStateBlocked {
 		err := errcode.ErrUserInvalid
@@ -54,7 +55,9 @@ func (us *UserDomainSvc) GetAuthToken(userId int64, platform string, sessionId s
 		// 为空说明是用户的登录行为，重新生成 sessionId
 		sessionId = util.GenSessionId(userId)
 	}
+	// 使用 refreshToken 更新时，sessionId 要保持一致
 	userSession.SessionId = sessionId
+	// 重新生成 AccessToken 和 RefreshToken
 	accessToken, refreshToken, err := util.GenUserAuthToken(userId)
 	if err != nil {
 		err = errcode.Wrap("Token 生成失败", err)
@@ -63,23 +66,26 @@ func (us *UserDomainSvc) GetAuthToken(userId int64, platform string, sessionId s
 	userSession.AccessToken = accessToken
 	userSession.RefreshToken = refreshToken
 
-	// 向缓存中设置 AccessToken 和 RefreshToken 的缓存
+	// 向缓存中设置新的 AccessToken 和 RefreshToken 的缓存
 	err = cache.SetUserToken(us.ctx, userSession)
 	if err != nil {
 		err = errcode.Wrap("设置 Token 缓存时发生错误", err)
 		return nil, err
 	}
+	// 删除已有的 Session 缓存，包括 AccessToken 和 RefreshToken
 	err = cache.DelOldSessionTokens(us.ctx, userSession)
 	if err != nil {
 		err = errcode.Wrap("删除旧Token时发生错误", err)
 		return nil, err
 	}
+	// 更新当前用户的 Session 缓存
 	err = cache.SetUserSession(us.ctx, userSession)
 	if err != nil {
 		err = errcode.Wrap("设置Session缓存时发生错误", err)
 		return nil, err
 	}
 
+	// 返回 Token 信息
 	srvCreateTime := time.Now()
 	tokenInfo := &do.TokenInfo{
 		AccessToken:   userSession.AccessToken,
