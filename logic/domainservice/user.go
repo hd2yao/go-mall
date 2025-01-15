@@ -206,3 +206,22 @@ func (us *UserDomainSvc) RegisterUser(userInfo *do.UserBaseInfo, plainPassword s
 	}
 	return userInfo, nil
 }
+
+func (us *UserDomainSvc) LoginUser(loginName string, plainPassword, platform string) (*do.TokenInfo, error) {
+	existedUser, err := us.UserDao.FindUserByLoginName(loginName)
+	if err != nil {
+		return nil, errcode.Wrap("UserDomainSvcRegisterUserError", err)
+	}
+	if existedUser.ID == 0 {
+		return nil, errcode.ErrUserNotRight
+	}
+
+	// 验证密码
+	if !util.BcryptCompare(existedUser.Password, plainPassword) {
+		return nil, errcode.ErrUserNotRight
+	}
+
+	// 生成 Token 和 Session
+	tokenInfo, err := us.GetAuthToken(existedUser.ID, platform, "")
+	return tokenInfo, err
+}

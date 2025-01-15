@@ -12,4 +12,6 @@ func registerUserRoutes(rg *gin.RouterGroup) {
 	g := rg.Group("/user")
 	// 注册用户
 	g.POST("register", controller.RegisterUser)
+	// 登录
+	g.POST("login", controller.LoginUser)
 }

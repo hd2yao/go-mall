@@ -80,3 +80,15 @@ func (us *UserAppSvc) UserRegister(userRegisterReq *request.UserRegister) error 
 
 	return nil
 }
+
+func (us *UserAppSvc) UserLogin(userLoginReq *request.UserLogin) (*reply.TokenReply, error) {
+	tokenInfo, err := us.userDomainSvc.LoginUser(userLoginReq.Body.LoginName, userLoginReq.Body.Password, userLoginReq.Header.Platform)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenReply := new(reply.TokenReply)
+	err = util.CopyProperties(tokenReply, tokenInfo)
+	// TODO: 执行用户登录成功后发送消息通知之类的外围辅助类逻辑
+	return tokenReply, err
+}

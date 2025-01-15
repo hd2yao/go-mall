@@ -8,3 +8,13 @@ type UserRegister struct {
 	Slogan          string `json:"slogan" binding:"max=30"`
 	Avatar          string `json:"avatar" binding:"max=100"`
 }
+
+type UserLogin struct {
+	Body struct {
+		LoginName string `json:"login_name" binding:"required,e164|email"`
+		Password  string `json:"password" binding:"required,min=8"`
+	}
+	Header struct {
+		Platform string `json:"platform" header:"platform" binding:"required,oneof=APP H5"`
+	}
+}

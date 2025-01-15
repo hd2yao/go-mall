@@ -43,3 +43,33 @@ func RegisterUser(c *gin.Context) {
 	app.NewResponse(c).SuccessOk()
 	return
 }
+
+func LoginUser(c *gin.Context) {
+	loginRequest := new(request.UserLogin)
+	if err := c.ShouldBindJSON(&loginRequest.Body); err != nil {
+		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
+		return
+	}
+	if err := c.ShouldBindHeader(&loginRequest.Header); err != nil {
+		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
+		return
+	}
+
+	// 用户登录
+	userSvc := appservice.NewUserAppSvc(c)
+	token, err := userSvc.UserLogin(loginRequest)
+	if err != nil {
+		if errors.Is(err, errcode.ErrUserNotRight) {
+			app.NewResponse(c).Error(errcode.ErrUserNotRight)
+		} else if errors.Is(err, errcode.ErrUserInvalid) {
+			app.NewResponse(c).Error(errcode.ErrUserInvalid)
+		} else {
+			app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		}
+		logger.New(c).Error("LoginUserError", "err", err)
+		return
+	}
+
+	app.NewResponse(c).Success(token)
+	return
+}
