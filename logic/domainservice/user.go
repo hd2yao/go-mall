@@ -9,15 +9,20 @@ import (
 	"github.com/hd2yao/go-mall/common/logger"
 	"github.com/hd2yao/go-mall/common/util"
 	"github.com/hd2yao/go-mall/dal/cache"
+	"github.com/hd2yao/go-mall/dal/dao"
 	"github.com/hd2yao/go-mall/logic/do"
 )
 
 type UserDomainSvc struct {
-	ctx context.Context
+	ctx     context.Context
+	UserDao *dao.UserDao
 }
 
 func NewUserDomainSvc(ctx context.Context) *UserDomainSvc {
-	return &UserDomainSvc{ctx: ctx}
+	return &UserDomainSvc{
+		ctx:     ctx,
+		UserDao: dao.NewUserDao(ctx),
+	}
 }
 
 // GetUserBaseInfo 获取用户基本信息(因为还没开发注册登录功能，先 Mock 一个返回)
@@ -163,9 +168,41 @@ func (us *UserDomainSvc) VerifyAccessToken(accessToken string) (*do.TokenVerify,
 	if tokenInfo != nil && tokenInfo.UserId != 0 {
 		tokenVerify.UserId = tokenInfo.UserId
 		tokenVerify.SessionId = tokenInfo.SessionId
+		tokenVerify.Platform = tokenInfo.Platform
 		tokenVerify.Approved = true
 	} else {
 		tokenVerify.Approved = false
 	}
 	return tokenVerify, nil
+}
+
+func (us *UserDomainSvc) RegisterUser(userInfo *do.UserBaseInfo, plainPassword string) (*do.UserBaseInfo, error) {
+	// 确定登录名可用
+	existedUser, err := us.UserDao.FindUserByLoginName(userInfo.LoginName)
+	if err != nil {
+		return nil, errcode.Wrap("UserDomainSvcRegisterUserError", err)
+	}
+	// 用户名已存在
+	if existedUser.LoginName != "" {
+		return nil, errcode.ErrUserNameOccupied
+	}
+	// 密码加密
+	passwordHash, err := util.BcryptPassword(plainPassword)
+	if err != nil {
+		err = errcode.Wrap("UserDomainSvcRegisterUserError", err)
+		return nil, err
+	}
+	// 创建用户
+	userModel, err := us.UserDao.CreateUser(userInfo, passwordHash)
+	if err != nil {
+		err = errcode.Wrap("UserDomainSvcRegisterUserError", err)
+		return nil, err
+	}
+
+	err = util.CopyProperties(userInfo, userModel)
+	if err != nil {
+		err = errcode.Wrap("UserDomainSvcRegisterUserError", err)
+		return nil, err
+	}
+	return userInfo, nil
 }
