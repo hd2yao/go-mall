@@ -145,3 +145,21 @@ func (us *UserDomainSvc) RefreshToken(refreshToken string) (*do.TokenInfo, error
 	}
 	return tokenInfo, nil
 }
+
+// VerifyAccessToken 验证 Token 是否有效
+func (us *UserDomainSvc) VerifyAccessToken(accessToken string) (*do.TokenVerify, error) {
+	tokenInfo, err := cache.GetAccessToken(us.ctx, accessToken)
+	if err != nil {
+		logger.New(us.ctx).Error("GetAccessTokenCacheErr", "err", err)
+		return nil, err
+	}
+	tokenVerify := new(do.TokenVerify)
+	if tokenInfo != nil && tokenInfo.UserId != 0 {
+		tokenVerify.UserId = tokenInfo.UserId
+		tokenVerify.SessionId = tokenInfo.SessionId
+		tokenVerify.Approved = true
+	} else {
+		tokenVerify.Approved = false
+	}
+	return tokenVerify, nil
+}

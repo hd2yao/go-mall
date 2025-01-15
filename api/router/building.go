@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/hd2yao/go-mall/api/controller"
+	"github.com/hd2yao/go-mall/common/middleware"
 )
 
 func registerBuildingRoute(rg *gin.RouterGroup) {
@@ -38,4 +39,6 @@ func registerBuildingRoute(rg *gin.RouterGroup) {
 	g.GET("token-make-test", controller.TestMakeToken)
 	// 测试刷新Token
 	g.GET("token-refresh-test", controller.TestRefreshToken)
+	// 测试Token认证中间件
+	g.GET("token-auth-test", middleware.AuthUser(), controller.TestAuthToken)
 }

@@ -202,3 +202,11 @@ func TestRefreshToken(c *gin.Context) {
 	}
 	app.NewResponse(c).Success(token)
 }
+
+func TestAuthToken(c *gin.Context) {
+	app.NewResponse(c).Success(gin.H{
+		"user_id":    c.GetInt64("user_id"),
+		"session_id": c.GetString("session_id"),
+	})
+	return
+}
