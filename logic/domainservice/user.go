@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/hd2yao/go-mall/api/request"
 	"github.com/hd2yao/go-mall/common/enum"
 	"github.com/hd2yao/go-mall/common/errcode"
 	"github.com/hd2yao/go-mall/common/logger"
@@ -40,6 +41,19 @@ func (us *UserDomainSvc) GetUserBaseInfo(userId int64) *do.UserBaseInfo {
 		return nil
 	}
 	return userBaseInfo
+}
+
+// UpdateUserBaseInfo 更新用户基本信息
+func (us *UserDomainSvc) UpdateUserBaseInfo(request *request.UserInfoUpdate, userId int64) error {
+	user, err := us.UserDao.FindUserById(userId)
+	if err != nil {
+		return err
+	}
+	user.Nickname = request.Nickname
+	user.Avatar = request.Avatar
+	user.Slogan = request.Slogan
+	err = us.UserDao.UpdateUser(user)
+	return err
 }
 
 // GetAuthToken 生成 AccessToken 和 RefreshToken

@@ -176,3 +176,22 @@ func UserInfo(c *gin.Context) {
 	app.NewResponse(c).Success(userInfoReply)
 	return
 }
+
+// UpdateUserInfo 个人信息更新
+func UpdateUserInfo(c *gin.Context) {
+	userInfoRequest := new(request.UserInfoUpdate)
+	if err := c.ShouldBindJSON(userInfoRequest); err != nil {
+		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
+		return
+	}
+
+	userSvc := appservice.NewUserAppSvc(c)
+	err := userSvc.UserInfoUpdate(userInfoRequest, c.GetInt64("user_id"))
+	if err != nil {
+		app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		return
+	}
+
+	app.NewResponse(c).SuccessOk()
+	return
+}

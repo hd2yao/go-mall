@@ -129,3 +129,8 @@ func (us *UserAppSvc) UserInfo(userId int64) *reply.UserInfoReply {
 	userInfoReply.LoginName = util.MaskLoginName(userInfoReply.LoginName)
 	return userInfoReply
 }
+
+// UserInfoUpdate 更新用户昵称、签名等信息
+func (us *UserAppSvc) UserInfoUpdate(request *request.UserInfoUpdate, userId int64) error {
+	return us.userDomainSvc.UpdateUserBaseInfo(request, userId)
+}
