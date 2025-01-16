@@ -19,6 +19,12 @@ type UserLogin struct {
 	}
 }
 
+type UserInfoUpdate struct {
+	Nickname string `json:"nickname" binding:"max=30"`
+	Slogan   string `json:"slogan" binding:"max=30"`
+	Avatar   string `json:"avatar" binding:"max=100"`
+}
+
 type PasswordResetApply struct {
 	LoginName string `json:"login_name" binding:"required,e164|email"`
 }

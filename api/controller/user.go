@@ -162,3 +162,17 @@ func PasswordReset(c *gin.Context) {
 	app.NewResponse(c).SuccessOk()
 	return
 }
+
+// UserInfo 个人信息查询
+func UserInfo(c *gin.Context) {
+	userId := c.GetInt64("user_id")
+	userSvc := appservice.NewUserAppSvc(c)
+	userInfoReply := userSvc.UserInfo(userId)
+	if userInfoReply == nil {
+		app.NewResponse(c).Error(errcode.ErrParams)
+		return
+	}
+
+	app.NewResponse(c).Success(userInfoReply)
+	return
+}
