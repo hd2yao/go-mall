@@ -255,3 +255,37 @@ func (us *UserDomainSvc) LogoutUser(userId int64, platform string) error {
 
 	return nil
 }
+
+// ApplyForPasswordReset 申请重置密码
+func (us *UserDomainSvc) ApplyForPasswordReset(loginName string) (passwordResetToken, code string, err error) {
+	user, err := us.UserDao.FindUserByLoginName(loginName)
+	if err != nil {
+		err = errcode.Wrap("ApplyForPasswordReset", err)
+		return
+	}
+	if user.ID == 0 {
+		err = errcode.ErrUserNotRight
+		return
+	}
+
+	// 生成重置密码 Token 和验证码 code
+	token, err := util.GenPasswordResetToken(user.ID)
+	code = util.RandNumStr(6)
+	if err != nil {
+		err = errcode.Wrap("ApplyForPasswordReset", err)
+		return
+	}
+
+	// 将 Token 和 code 存入缓存
+	err = cache.SetPasswordResetToken(us.ctx, user.ID, token, code)
+	if err != nil {
+		err = errcode.Wrap("ApplyForPasswordReset", err)
+		return
+	}
+
+	// TODO: 发送验证码 code 到用户邮箱或手机
+
+	// 发送成功后返回 Token
+	passwordResetToken = token
+	return
+}

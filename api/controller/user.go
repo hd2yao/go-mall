@@ -109,3 +109,25 @@ func LogoutUser(c *gin.Context) {
 	app.NewResponse(c).SuccessOk()
 	return
 }
+
+func PasswordResetApply(c *gin.Context) {
+	userRequest := new(request.PasswordResetApply)
+	if err := c.ShouldBindJSON(userRequest); err != nil {
+		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
+		return
+	}
+
+	userSvc := appservice.NewUserAppSvc(c)
+	replyData, err := userSvc.PasswordResetApply(userRequest)
+	if err != nil {
+		if errors.Is(err, errcode.ErrUserNotRight) {
+			app.NewResponse(c).Error(errcode.ErrUserNotRight)
+		} else {
+			app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		}
+		return
+	}
+
+	app.NewResponse(c).Success(replyData)
+	return
+}

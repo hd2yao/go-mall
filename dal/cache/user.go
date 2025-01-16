@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -193,4 +195,39 @@ func GetAccessToken(ctx context.Context, accessToken string) (*do.SessionInfo, e
 	}
 	json.Unmarshal([]byte(result), &session)
 	return session, nil
+}
+
+// 重置密码
+
+// SetPasswordResetToken 设置重置密码的验证 Token 信息到缓存，15分钟有效
+func SetPasswordResetToken(ctx context.Context, userId int64, token, code string) error {
+	redisKey := fmt.Sprintf(enum.REDISKEY_PASSWORDRESET_TOKEN, token)
+	val := fmt.Sprintf("%d:%s", userId, code) // val 以 userId:code 的形式存储
+	return Redis().Set(ctx, redisKey, val, enum.PasswordTokenDuration).Err()
+}
+
+// GetPasswordResetToken 读取缓存验证请求是否有效
+func GetPasswordResetToken(ctx context.Context, token string) (userId int64, code string, err error) {
+	redisKey := fmt.Sprintf(enum.REDISKEY_PASSWORDRESET_TOKEN, token)
+	val, redisErr := Redis().Get(ctx, redisKey).Result()
+	if redisErr != nil && redisErr != redis.Nil {
+		err = redisErr
+		return
+	}
+	valArr := strings.Split(val, ":")
+	if len(valArr) != 2 {
+		// 密码重置 Token 无对应的缓存，判定参数不合法，此处直接返回
+		return
+	}
+
+	// 解析 userId 和 code
+	userId, _ = strconv.ParseInt(valArr[0], 10, 64)
+	code = valArr[1]
+	return
+}
+
+// DelPasswordResetToken 删除密码重置 Token
+func DelPasswordResetToken(ctx context.Context, token string) error {
+	redisKey := fmt.Sprintf(enum.REDISKEY_PASSWORDRESET_TOKEN, token)
+	return Redis().Del(ctx, redisKey).Err()
 }

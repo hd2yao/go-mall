@@ -59,6 +59,11 @@ func GenUserAuthToken(uid int64) (accessToken, refreshToken string, err error) {
 	return accessToken, refreshToken, nil
 }
 
+func GenPasswordResetToken(userId int64) (string, error) {
+	// 与 AccessToken 使用同一规则，必要时可以反解出 userId
+	return genAccessToken(userId)
+}
+
 func GenSessionId(userId int64) string {
 	return fmt.Sprintf("%d-%d-%s", userId, time.Now().Unix(), RandNumStr(6))
 }

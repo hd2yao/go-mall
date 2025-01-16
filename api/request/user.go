@@ -18,3 +18,7 @@ type UserLogin struct {
 		Platform string `json:"platform" header:"platform" binding:"required,oneof=APP H5"`
 	}
 }
+
+type PasswordResetApply struct {
+	LoginName string `json:"login_name" binding:"required,e164|email"`
+}
