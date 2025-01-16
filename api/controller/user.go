@@ -111,14 +111,14 @@ func LogoutUser(c *gin.Context) {
 }
 
 func PasswordResetApply(c *gin.Context) {
-	userRequest := new(request.PasswordResetApply)
-	if err := c.ShouldBindJSON(userRequest); err != nil {
+	passwordResetApplyRequest := new(request.PasswordResetApply)
+	if err := c.ShouldBindJSON(passwordResetApplyRequest); err != nil {
 		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
 		return
 	}
 
 	userSvc := appservice.NewUserAppSvc(c)
-	replyData, err := userSvc.PasswordResetApply(userRequest)
+	replyData, err := userSvc.PasswordResetApply(passwordResetApplyRequest)
 	if err != nil {
 		if errors.Is(err, errcode.ErrUserNotRight) {
 			app.NewResponse(c).Error(errcode.ErrUserNotRight)
@@ -129,5 +129,36 @@ func PasswordResetApply(c *gin.Context) {
 	}
 
 	app.NewResponse(c).Success(replyData)
+	return
+}
+
+func PasswordReset(c *gin.Context) {
+	passwordResetRequest := new(request.PasswordReset)
+	if err := c.ShouldBindJSON(passwordResetRequest); err != nil {
+		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
+		return
+	}
+
+	// Validator 验证通过后再应用 密码复杂度这样的特殊验证
+	if !util.PasswordComplexityVerify(passwordResetRequest.Password) {
+		logger.New(c).Warn("RegisterUserError", "err", "密码复杂度不满足要求", "password", passwordResetRequest.Password)
+		app.NewResponse(c).Error(errcode.ErrParams)
+		return
+	}
+
+	userSvc := appservice.NewUserAppSvc(c)
+	err := userSvc.PasswordReset(passwordResetRequest)
+	if err != nil {
+		if errors.Is(err, errcode.ErrParams) {
+			app.NewResponse(c).Error(errcode.ErrParams)
+		} else if errors.Is(err, errcode.ErrUserInvalid) {
+			app.NewResponse(c).Error(errcode.ErrUserInvalid)
+		} else {
+			app.NewResponse(c).Error(errcode.ErrServer)
+		}
+		return
+	}
+
+	app.NewResponse(c).SuccessOk()
 	return
 }

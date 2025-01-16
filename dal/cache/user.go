@@ -155,6 +155,18 @@ func DelUserSessionOnPlatform(ctx context.Context, userId int64, platform string
 
 // DelUserSession 删除用户在全平台的 Session 缓存
 func DelUserSession(ctx context.Context, userId int64) error {
+	// 先获取所有平台上的 Session 信息
+	sessions, err := GerUserAllSessions(ctx, userId)
+	if err != nil {
+		return err
+	}
+
+	// 把所有 Session 中保存的正在使用的 Token 都过期掉
+	for _, session := range sessions {
+		DelOldSessionTokens(ctx, session)
+	}
+
+	// Token 过期完成后再删掉 Session
 	redisKey := fmt.Sprintf(enum.REDIS_KEY_USER_SESSION, userId)
 	return Redis().Del(ctx, redisKey).Err()
 }

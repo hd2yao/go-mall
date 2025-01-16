@@ -289,3 +289,51 @@ func (us *UserDomainSvc) ApplyForPasswordReset(loginName string) (passwordResetT
 	passwordResetToken = token
 	return
 }
+
+func (us *UserDomainSvc) ResetPassword(resetToken, resetCode, newPlainPassword string) error {
+	log := logger.New(us.ctx)
+	userID, code, err := cache.GetPasswordResetToken(us.ctx, resetToken)
+	if err != nil {
+		log.Error("ResetPasswordError", "err", err)
+		err = errcode.Wrap("ResetPasswordError", err)
+		return err
+	}
+
+	// 验证 Token 和 code 是否匹配
+	if userID == 0 || code != resetCode {
+		return errcode.ErrParams
+	}
+
+	user, err := us.UserDao.FindUserById(userID)
+	if err != nil {
+		return errcode.Wrap("ResetPasswordError", err)
+	}
+	// 找不到用户或者用户为封禁状态
+	if user.ID == 0 || user.IsBlocked == enum.UserBlockStateBlocked {
+		return errcode.ErrUserInvalid
+	}
+
+	newPass, err := util.BcryptPassword(newPlainPassword)
+	if err != nil {
+		return errcode.Wrap("ResetPasswordError", err)
+	}
+	// 更新用户密码
+	user.Password = newPass
+	err = us.UserDao.UpdateUser(user)
+	if err != nil {
+		return errcode.Wrap("ResetPasswordError", err)
+	}
+
+	// 删除用户所有存在的 Session
+	err = cache.DelUserSession(us.ctx, user.ID)
+	if err != nil {
+		log.Error("ResetPasswordError", "err", err)
+	}
+
+	// 删除用户重置密码的 Token
+	err = cache.DelPasswordResetToken(us.ctx, resetToken)
+	if err != nil {
+		log.Error("ResetPasswordError", "err", err)
+	}
+	return nil
+}

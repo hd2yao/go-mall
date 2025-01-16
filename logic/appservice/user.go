@@ -111,3 +111,8 @@ func (us *UserAppSvc) PasswordResetApply(request *request.PasswordResetApply) (*
 	replyData.PasswordResetToken = passwordResetToken
 	return replyData, nil
 }
+
+// PasswordReset 重置密码
+func (us *UserAppSvc) PasswordReset(request *request.PasswordReset) error {
+	return us.userDomainSvc.ResetPassword(request.Token, request.Code, request.Password)
+}

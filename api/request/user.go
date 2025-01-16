@@ -22,3 +22,10 @@ type UserLogin struct {
 type PasswordResetApply struct {
 	LoginName string `json:"login_name" binding:"required,e164|email"`
 }
+
+type PasswordReset struct {
+	Password        string `json:"password" binding:"required,min=8"`
+	PasswordConfirm string `json:"password_confirm" binding:"required,eqfield=Password"`
+	Token           string `json:"password_reset_token" binding:"required"`
+	Code            string `json:"password_reset_code" binding:"required"`
+}
