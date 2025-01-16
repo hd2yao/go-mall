@@ -25,19 +25,21 @@ func NewUserDomainSvc(ctx context.Context) *UserDomainSvc {
 	}
 }
 
-// GetUserBaseInfo 获取用户基本信息(因为还没开发注册登录功能，先 Mock 一个返回)
+// GetUserBaseInfo 获取用户基本信息
 func (us *UserDomainSvc) GetUserBaseInfo(userId int64) *do.UserBaseInfo {
-	return &do.UserBaseInfo{
-		ID:        12345678,
-		NickName:  "hd2yao",
-		LoginName: "hd2yao",
-		Verified:  1,
-		Avatar:    "",
-		Slogan:    "",
-		IsBlocked: 0,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+	log := logger.New(us.ctx)
+	user, err := us.UserDao.FindUserById(userId)
+	if err != nil {
+		log.Error("GetUserBaseInfoError", "err", err)
+		return nil
 	}
+	userBaseInfo := new(do.UserBaseInfo)
+	err = util.CopyProperties(userBaseInfo, user)
+	if err != nil {
+		log.Error("GetUserBaseInfoError", "err", err)
+		return nil
+	}
+	return userBaseInfo
 }
 
 // GetAuthToken 生成 AccessToken 和 RefreshToken
