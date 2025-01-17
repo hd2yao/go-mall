@@ -195,3 +195,22 @@ func UpdateUserInfo(c *gin.Context) {
 	app.NewResponse(c).SuccessOk()
 	return
 }
+
+// AddUserAddress 新增收获地址
+func AddUserAddress(c *gin.Context) {
+	requestAddress := new(request.UserAddress)
+	if err := c.ShouldBindJSON(requestAddress); err != nil {
+		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
+		return
+	}
+
+	userSvc := appservice.NewUserAppSvc(c)
+	err := userSvc.AddUserAddress(requestAddress, c.GetInt64("user_id"))
+	if err != nil {
+		app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		return
+	}
+
+	app.NewResponse(c).SuccessOk()
+	return
+}

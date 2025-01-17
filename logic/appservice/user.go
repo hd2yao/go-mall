@@ -134,3 +134,18 @@ func (us *UserAppSvc) UserInfo(userId int64) *reply.UserInfoReply {
 func (us *UserAppSvc) UserInfoUpdate(request *request.UserInfoUpdate, userId int64) error {
 	return us.userDomainSvc.UpdateUserBaseInfo(request, userId)
 }
+
+// AddUserAddress 新增用户收获地址
+func (us *UserAppSvc) AddUserAddress(request *request.UserAddress, userId int64) error {
+	userAddressInfo := new(do.UserAddressInfo)
+	err := util.CopyProperties(userAddressInfo, request)
+	if err != nil {
+		return errcode.Wrap("请求转换成 UserAddressInfo 失败", err)
+	}
+	userAddressInfo.UserId = userId
+	newUserAddress, err := us.userDomainSvc.AddUserAddress(userAddressInfo)
+	if err != nil {
+		logger.New(us.ctx).Error("添加用户收货地址失败", "err", err, "return data", newUserAddress)
+	}
+	return err
+}

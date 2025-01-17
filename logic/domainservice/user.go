@@ -353,3 +353,18 @@ func (us *UserDomainSvc) ResetPassword(resetToken, resetCode, newPlainPassword s
 	}
 	return nil
 }
+
+// AddUserAddress 新增用户收货地址
+func (us *UserDomainSvc) AddUserAddress(addressInfo *do.UserAddressInfo) (*do.UserAddressInfo, error) {
+	addressModel, err := us.UserDao.CreateUserAddress(addressInfo)
+	if err != nil {
+		err = errcode.Wrap("AddUserAddress", err)
+		return nil, err
+	}
+	err = util.CopyProperties(addressInfo, addressModel)
+	if err != nil {
+		err = errcode.Wrap("AddUserAddress", err)
+		return nil, err
+	}
+	return addressInfo, nil
+}

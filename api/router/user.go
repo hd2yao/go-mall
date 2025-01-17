@@ -27,4 +27,6 @@ func registerUserRoutes(rg *gin.RouterGroup) {
 	g.GET("info", middleware.AuthUser(), controller.UserInfo)
 	// 更新用户基本信息
 	g.PATCH("info", middleware.AuthUser(), controller.UpdateUserInfo)
+	// 新增用户收货地址信息
+	g.POST("address", middleware.AuthUser(), controller.AddUserAddress)
 }
