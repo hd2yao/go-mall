@@ -405,3 +405,19 @@ func (us *UserDomainSvc) GetUserSingleAddress(userId int64, addressId int64) (*d
 	}
 	return userAddress, nil
 }
+
+// ModifyUserAddress 更改用户的地址信息
+func (us *UserDomainSvc) ModifyUserAddress(address *do.UserAddressInfo) error {
+	log := logger.New(us.ctx)
+	addressModel, err := us.UserDao.GetSingleAddress(address.ID)
+	if err != nil || address.UserId != addressModel.UserId {
+		// 不匹配的情况打印一条日志，监控系统按日志里的关键词做一下监控，好发现问题
+		log.Error("UserAddressNotMatchError", "err", err, "return data", addressModel, "request data", address)
+		return errcode.ErrParams
+	}
+	err = us.UserDao.UpdateUserAddress(address)
+	if err != nil {
+		err = errcode.Wrap("UpdateUserAddressError", err)
+	}
+	return err
+}

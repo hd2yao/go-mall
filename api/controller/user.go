@@ -247,3 +247,32 @@ func GetUserAddress(c *gin.Context) {
 	}
 	app.NewResponse(c).Success(replyData)
 }
+
+// UpdateUserAddress 修改用户地址信息
+func UpdateUserAddress(c *gin.Context) {
+	// 验证 URL 中的参数
+	addressId, _ := strconv.ParseInt(c.Param("address_id"), 10, 64)
+	if addressId <= 0 {
+		app.NewResponse(c).Error(errcode.ErrParams)
+		return
+	}
+
+	// 验证请求 Body 中的参数
+	requestData := new(request.UserAddress)
+	if err := c.ShouldBindJSON(requestData); err != nil {
+		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
+		return
+	}
+
+	userSvc := appservice.NewUserAppSvc(c)
+	err := userSvc.ModifyUserAddress(requestData, c.GetInt64("user_id"), addressId)
+	if err != nil {
+		if errors.Is(err, errcode.ErrParams) {
+			app.NewResponse(c).Error(errcode.ErrParams)
+		} else {
+			app.NewResponse(c).Error(errcode.ErrServer)
+		}
+		return
+	}
+	app.NewResponse(c).SuccessOk()
+}

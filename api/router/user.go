@@ -33,4 +33,6 @@ func registerUserRoutes(rg *gin.RouterGroup) {
 	g.GET("address/", middleware.AuthUser(), controller.GetUserAddresses)
 	// 查询用户单个收货地址信息
 	g.GET("address/:address_id", middleware.AuthUser(), controller.GetUserAddress)
+	// 修改用户的地址
+	g.PATCH("address/:address_id", middleware.AuthUser(), controller.UpdateUserAddress)
 }

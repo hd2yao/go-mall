@@ -195,3 +195,17 @@ func (us *UserAppSvc) GetUserSingleAddress(userId, addressId int64) (*reply.User
 
 	return userAddress, nil
 }
+
+// ModifyUserAddress 更新用户的某个收货地址信息
+func (us *UserAppSvc) ModifyUserAddress(requestData *request.UserAddress, userId, addressId int64) error {
+	userAddressInfo := new(do.UserAddressInfo)
+	err := util.CopyProperties(userAddressInfo, requestData)
+	if err != nil {
+		return errcode.Wrap("请求转换成 UserAddressInfo 失败", err)
+	}
+
+	userAddressInfo.UserId = userId
+	userAddressInfo.ID = addressId
+	err = us.userDomainSvc.ModifyUserAddress(userAddressInfo)
+	return err
+}

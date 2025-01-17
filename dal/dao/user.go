@@ -100,6 +100,40 @@ func (ud *UserDao) CreateUserAddress(userAddress *do.UserAddressInfo) (*model.Us
 	return addressModel, nil
 }
 
+func (ud *UserDao) UpdateUserAddress(userAddress *do.UserAddressInfo) error {
+	addressModel := new(model.UserAddress)
+	err := util.CopyProperties(addressModel, userAddress)
+	if err != nil {
+		err = errcode.Wrap("UserDaoUpdateUserAddressError", err)
+		return err
+	}
+
+	// 确定用户是否要更新默认地址
+	var defaultAddress *model.UserAddress
+	if addressModel.Default == enum.AddressIsUserDefault {
+		defaultAddress, err = ud.GetUserDefaultAddress(addressModel.UserId)
+		if err != nil {
+			return err
+		}
+	}
+
+	// 存在默认地址且默认地址不是要更新的这条地址信息，则把原默认地址更新为非默认，然后再写入新的地址信息
+	if defaultAddress != nil && defaultAddress.ID != 0 && defaultAddress.ID != addressModel.ID {
+		err = DBMaster().Transaction(func(tx *gorm.DB) error {
+			err = tx.WithContext(ud.ctx).Model(defaultAddress).Select("Default").
+				Updates(model.UserAddress{Default: enum.AddressIsNotUserDefault}).Error
+			if err != nil {
+				return err
+			}
+			err = tx.WithContext(ud.ctx).Model(addressModel).Updates(addressModel).Error
+			return err
+		})
+	} else {
+		err = DBMaster().WithContext(ud.ctx).Model(addressModel).Updates(addressModel).Error
+	}
+	return err
+}
+
 func (ud *UserDao) GetUserDefaultAddress(userId int64) (*model.UserAddress, error) {
 	address := new(model.UserAddress)
 	err := DB().Where(model.UserAddress{UserId: userId, Default: enum.AddressIsUserDefault}).
