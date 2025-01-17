@@ -209,3 +209,8 @@ func (us *UserAppSvc) ModifyUserAddress(requestData *request.UserAddress, userId
 	err = us.userDomainSvc.ModifyUserAddress(userAddressInfo)
 	return err
 }
+
+// DeleteOneUserAddress 删除地址
+func (us *UserAppSvc) DeleteOneUserAddress(userId, addressId int64) error {
+	return us.userDomainSvc.DeleteOneUserAddress(userId, addressId)
+}

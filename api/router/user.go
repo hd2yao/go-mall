@@ -35,4 +35,6 @@ func registerUserRoutes(rg *gin.RouterGroup) {
 	g.GET("address/:address_id", middleware.AuthUser(), controller.GetUserAddress)
 	// 修改用户的地址
 	g.PATCH("address/:address_id", middleware.AuthUser(), controller.UpdateUserAddress)
+	// 删除用户的单条地址信息
+	g.DELETE("address/:address_id", middleware.AuthUser(), controller.DeleteUserAddress)
 }

@@ -276,3 +276,24 @@ func UpdateUserAddress(c *gin.Context) {
 	}
 	app.NewResponse(c).SuccessOk()
 }
+
+// DeleteUserAddress 删除用户地址信息
+func DeleteUserAddress(c *gin.Context) {
+	addressId, _ := strconv.ParseInt(c.Param("address_id"), 10, 64)
+	if addressId <= 0 {
+		app.NewResponse(c).Error(errcode.ErrParams)
+		return
+	}
+
+	userSvc := appservice.NewUserAppSvc(c)
+	err := userSvc.DeleteOneUserAddress(c.GetInt64("user_id"), addressId)
+	if err != nil {
+		if errors.Is(err, errcode.ErrParams) {
+			app.NewResponse(c).Error(errcode.ErrParams)
+		} else {
+			app.NewResponse(c).Error(errcode.ErrServer)
+		}
+		return
+	}
+	app.NewResponse(c).SuccessOk()
+}

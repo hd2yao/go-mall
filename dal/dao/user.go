@@ -158,3 +158,7 @@ func (ud *UserDao) GetSingleAddress(addressId int64) (*model.UserAddress, error)
 		First(address).Error
 	return address, err
 }
+
+func (ud *UserDao) DeleteOneAddress(address *model.UserAddress) error {
+	return DBMaster().Delete(address).Error
+}
