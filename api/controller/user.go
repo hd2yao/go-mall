@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -213,4 +214,36 @@ func AddUserAddress(c *gin.Context) {
 
 	app.NewResponse(c).SuccessOk()
 	return
+}
+
+// GetUserAddresses 获取用户的收货信息列表
+func GetUserAddresses(c *gin.Context) {
+	userSvc := appservice.NewUserAppSvc(c)
+	replyData, err := userSvc.GetUserAddresses(c.GetInt64("user_id"))
+	if err != nil {
+		app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		return
+	}
+	app.NewResponse(c).Success(replyData)
+}
+
+// GetUserAddress 获取用户单个收货信息
+func GetUserAddress(c *gin.Context) {
+	addressId, _ := strconv.ParseInt(c.Param("address_id"), 10, 64)
+	if addressId <= 0 {
+		app.NewResponse(c).Error(errcode.ErrParams)
+		return
+	}
+
+	userSvc := appservice.NewUserAppSvc(c)
+	replyData, err := userSvc.GetUserSingleAddress(c.GetInt64("user_id"), addressId)
+	if err != nil {
+		if errors.Is(err, errcode.ErrParams) {
+			app.NewResponse(c).Error(errcode.ErrParams)
+		} else {
+			app.NewResponse(c).Error(errcode.ErrServer)
+		}
+		return
+	}
+	app.NewResponse(c).Success(replyData)
 }

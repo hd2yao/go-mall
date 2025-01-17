@@ -149,3 +149,49 @@ func (us *UserAppSvc) AddUserAddress(request *request.UserAddress, userId int64)
 	}
 	return err
 }
+
+// GetUserAddresses 查询用户所有收货地址信息
+func (us *UserAppSvc) GetUserAddresses(userId int64) ([]*reply.UserAddress, error) {
+	userAddresses := make([]*reply.UserAddress, 0)
+	addresses, err := us.userDomainSvc.GetUserAddresses(userId)
+	if err != nil {
+		return nil, err
+	}
+	if len(addresses) == 0 {
+		// 没有数据, 返回 userAddressesReply 而不是 nil, 避免格式化时 data 字段值为 null
+		return userAddresses, nil
+	}
+
+	err = util.CopyProperties(&userAddresses, addresses)
+	if err != nil {
+		err = errcode.Wrap("请求转换成 UserAddress 失败", err)
+		return nil, err
+	}
+
+	// 用户姓名和手机号脱敏
+	for _, address := range userAddresses {
+		address.MaskedUserName = util.MaskRealName(address.UserName)
+		address.MaskedUserPhone = util.MaskPhone(address.UserPhone)
+	}
+
+	return userAddresses, nil
+}
+
+// GetUserSingleAddress 获取单个地址信息
+func (us *UserAppSvc) GetUserSingleAddress(userId, addressId int64) (*reply.UserAddress, error) {
+	addressInfo, err := us.userDomainSvc.GetUserSingleAddress(userId, addressId)
+	if err != nil {
+		return nil, err
+	}
+
+	userAddress := new(reply.UserAddress)
+	err = util.CopyProperties(userAddress, addressInfo)
+	if err != nil {
+		err = errcode.Wrap("请求转换成 UserAddress 失败", err)
+		return nil, err
+	}
+	userAddress.MaskedUserName = util.MaskRealName(userAddress.UserName)
+	userAddress.MaskedUserPhone = util.MaskPhone(userAddress.UserPhone)
+
+	return userAddress, nil
+}

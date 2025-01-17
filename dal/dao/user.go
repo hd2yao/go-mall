@@ -109,3 +109,18 @@ func (ud *UserDao) GetUserDefaultAddress(userId int64) (*model.UserAddress, erro
 	}
 	return address, nil
 }
+
+func (ud *UserDao) FindUserAddresses(userId int64) ([]*model.UserAddress, error) {
+	addresses := make([]*model.UserAddress, 0)
+	err := DB().Where(model.UserAddress{UserId: userId}).
+		Order("`default` DESC"). // 默认地址排在前面
+		Find(&addresses).Error
+	return addresses, err
+}
+
+func (ud *UserDao) GetSingleAddress(addressId int64) (*model.UserAddress, error) {
+	address := new(model.UserAddress)
+	err := DB().Where(model.UserAddress{ID: addressId}).
+		First(address).Error
+	return address, err
+}

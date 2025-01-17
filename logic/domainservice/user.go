@@ -368,3 +368,40 @@ func (us *UserDomainSvc) AddUserAddress(addressInfo *do.UserAddressInfo) (*do.Us
 	}
 	return addressInfo, nil
 }
+
+// GetUserAddresses 查询用户收货信息列表
+func (us *UserDomainSvc) GetUserAddresses(userId int64) ([]*do.UserAddressInfo, error) {
+	addresses, err := us.UserDao.FindUserAddresses(userId)
+	if err != nil {
+		err = errcode.Wrap("GetUserAddresses", err)
+		return nil, err
+	}
+
+	userAddresses := make([]*do.UserAddressInfo, 0)
+	if len(addresses) == 0 {
+		return userAddresses, nil
+	}
+	err = util.CopyProperties(&userAddresses, addresses)
+	if err != nil {
+		err = errcode.Wrap("GetUserAddresses", err)
+		return nil, err
+	}
+	return userAddresses, nil
+}
+
+// GetUserSingleAddress 获取单个地址信息
+func (us *UserDomainSvc) GetUserSingleAddress(userId int64, addressId int64) (*do.UserAddressInfo, error) {
+	address, err := us.UserDao.GetSingleAddress(addressId)
+	if err != nil || address.UserId != userId {
+		logger.New(us.ctx).Error("UserAddressNotMatchError", "err", err, "return data", address, "addressId", addressId, "userId", userId)
+		return nil, errcode.ErrParams
+	}
+
+	userAddress := new(do.UserAddressInfo)
+	err = util.CopyProperties(userAddress, address)
+	if err != nil {
+		err = errcode.Wrap("GetUserSingleAddress", err)
+		return nil, err
+	}
+	return userAddress, nil
+}
