@@ -102,3 +102,19 @@ func (cds *CommodityDomainSvc) GetHierarchicCategories() []*do.HierarchicCommodi
 
 	return hierarchyCategories
 }
+
+// GetSubCategories 获取ParentId对应的直接子分类
+func (cds *CommodityDomainSvc) GetSubCategories(parentId int64) ([]*do.CommodityCategory, error) {
+	categoriesModel, err := cds.commodityDao.GetSubCategories(parentId)
+	if err != nil {
+		return nil, errcode.Wrap("GetSubCategoriesError", err)
+	}
+
+	categories := make([]*do.CommodityCategory, 0, len(categoriesModel))
+	err = util.CopyProperties(&categories, categoriesModel)
+	if err != nil {
+		return nil, errcode.ErrCoverData
+	}
+
+	return categories, nil
+}

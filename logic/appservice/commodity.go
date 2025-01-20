@@ -39,3 +39,23 @@ func (cas *CommodityAppSvc) GetCategoryHierarchy() []*reply.HierarchicCommodityC
 	}
 	return replyData
 }
+
+// GetSubCategories 按ParentId查询直接子分类
+func (cas *CommodityAppSvc) GetSubCategories(parentId int64) []*reply.CommodityCategory {
+	log := logger.New(cas.ctx)
+	categories, err := cas.commodityDomainSvc.GetSubCategories(parentId)
+	replyData := make([]*reply.CommodityCategory, 0, len(categories))
+	if err != nil {
+		// 有错误返回空列表, 不阻塞前端
+		log.Error("CommodityAppSvcGetSubCategoriesError", "err", err)
+		return replyData
+	}
+
+	err = util.CopyProperties(&replyData, categories)
+	if err != nil {
+		log.Error(errcode.ErrCoverData.Msg(), "err", err)
+		return replyData
+	}
+
+	return replyData
+}

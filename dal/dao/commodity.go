@@ -27,6 +27,11 @@ func (cd *CommodityDao) InitCategoryData(categoryDos []*do.CommodityCategory) er
 	return cd.BulkCreateCommodityCategories(categoryModels)
 }
 
+// BulkCreateCommodityCategories 批量创建商品分类
+func (cd *CommodityDao) BulkCreateCommodityCategories(categories []*model.CommodityCategory) error {
+	return DBMaster().WithContext(cd.ctx).Create(categories).Error
+}
+
 // GetAllCategories 获取所有商品分类
 func (cd *CommodityDao) GetAllCategories() ([]*model.CommodityCategory, error) {
 	categories := make([]*model.CommodityCategory, 0)
@@ -34,7 +39,12 @@ func (cd *CommodityDao) GetAllCategories() ([]*model.CommodityCategory, error) {
 	return categories, err
 }
 
-// BulkCreateCommodityCategories 批量创建商品分类
-func (cd *CommodityDao) BulkCreateCommodityCategories(categories []*model.CommodityCategory) error {
-	return DBMaster().WithContext(cd.ctx).Create(categories).Error
+// GetSubCategories 查询指定 ID 下的商品分类
+func (cd *CommodityDao) GetSubCategories(parentId int64) ([]*model.CommodityCategory, error) {
+	categories := make([]*model.CommodityCategory, 0)
+	err := DB().WithContext(cd.ctx).
+		Where("parent_id = ?", parentId).
+		Order("rank DESC").
+		Find(&categories).Error
+	return categories, err
 }

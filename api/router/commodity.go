@@ -11,4 +11,6 @@ func registerCommodityRoutes(rg *gin.RouterGroup) {
 	g := rg.Group("/commodity/")
 	// 按层级划分的所有商品分类
 	g.GET("category-hierarchy/", controller.GetCategoryHierarchy)
+	// 按ParentID 查询商品分类列表
+	g.GET("category/", controller.GetCategoriesWithParentId)
 }
