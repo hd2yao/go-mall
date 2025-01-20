@@ -173,3 +173,13 @@ func TestAuthToken(c *gin.Context) {
 	})
 	return
 }
+
+func InitCategoryTestData(c *gin.Context) {
+	svc := appservice.NewDemoAppSvc(c)
+	err := svc.InitCommodityCategoryData()
+	if err != nil {
+		app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		return
+	}
+	app.NewResponse(c).SuccessOk()
+}

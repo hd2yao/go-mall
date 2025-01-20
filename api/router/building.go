@@ -37,4 +37,6 @@ func registerBuildingRoute(rg *gin.RouterGroup) {
 	g.GET("httptool-post-test", controller.TestForHttpToolPost)
 	// 测试Token认证中间件
 	g.GET("token-auth-test", middleware.AuthUser(), controller.TestAuthToken)
+	// 初始化商品分类测试数据
+	g.GET("init-category-data", controller.InitCategoryTestData)
 }
