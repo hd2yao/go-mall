@@ -27,7 +27,7 @@ func TestPing(c *gin.Context) {
 func TestConfigRead(c *gin.Context) {
 	database := config.Database
 	c.JSON(http.StatusOK, gin.H{
-		"type":     database.Type,
+		"type":     database.Master.Type,
 		"max_life": database.Master.MaxLifeTime,
 	})
 	return

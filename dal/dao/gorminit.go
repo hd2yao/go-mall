@@ -1,10 +1,10 @@
 package dao
 
 import (
-    "gorm.io/driver/mysql"
-    "gorm.io/gorm"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 
-    "github.com/hd2yao/go-mall/config"
+	"github.com/hd2yao/go-mall/config"
 )
 
 var _DbMaster *gorm.DB
@@ -17,40 +17,50 @@ var _DbSlave *gorm.DB
 
 // DB 返回只读实例
 func DB() *gorm.DB {
-    return _DbSlave
+	return _DbSlave
 }
 
 // DBMaster 返回主库实例
 func DBMaster() *gorm.DB {
-    return _DbMaster
+	return _DbMaster
 }
 
 func init() {
-    _DbMaster = initDB(config.Database.Master)
-    _DbSlave = initDB(config.Database.Slave)
+	_DbMaster = initDB(config.Database.Master)
+	_DbSlave = initDB(config.Database.Slave)
+}
+
+func getDialector(t, dsn string) gorm.Dialector {
+	//switch t { 项目数据库需要加载多数据源时去掉注释
+	//case "postgres":
+	//	return postgres.Open(dsn)
+	//default:
+	//	return mysql.Open(dsn)
+	//}
+	return mysql.Open(dsn)
 }
 
 func initDB(option config.DbConnectOption) *gorm.DB {
-    db, err := gorm.Open(
-        mysql.Open(option.DSN),
-        &gorm.Config{ // 替换成本项目实现的 gormLogger
-            Logger: NewGormLogger(),
-        })
-    if err != nil {
-        panic(err)
-    }
+	db, err := gorm.Open(
+		getDialector(option.Type, option.DSN),
+		&gorm.Config{ // 替换成本项目实现的 gormLogger
+			Logger: NewGormLogger(),
+		})
+	if err != nil {
+		panic(err)
+	}
 
-    sqlDB, _ := db.DB()
-    // SetMaxOpenConns 设置数据库的最大打开连接数。
-    sqlDB.SetMaxOpenConns(option.MaxOpenConn)
-    // SetMaxIdleConns 设置空闲连接池中连接的最大数量。
-    sqlDB.SetMaxIdleConns(option.MaxIdleConn)
-    // SetConnMaxLifetime 设置连接可重复使用的最长时间。
-    sqlDB.SetConnMaxLifetime(option.MaxLifeTime)
+	sqlDB, _ := db.DB()
+	// SetMaxOpenConns 设置数据库的最大打开连接数。
+	sqlDB.SetMaxOpenConns(option.MaxOpenConn)
+	// SetMaxIdleConns 设置空闲连接池中连接的最大数量。
+	sqlDB.SetMaxIdleConns(option.MaxIdleConn)
+	// SetConnMaxLifetime 设置连接可重复使用的最长时间。
+	sqlDB.SetConnMaxLifetime(option.MaxLifeTime)
 
-    // 连接测试
-    if err = sqlDB.Ping(); err != nil {
-        panic(err)
-    }
-    return db
+	// 连接测试
+	if err = sqlDB.Ping(); err != nil {
+		panic(err)
+	}
+	return db
 }
