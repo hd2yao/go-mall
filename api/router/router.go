@@ -12,4 +12,5 @@ func RegisterRoutes(engine *gin.Engine) {
 	routeGroup := engine.Group("")
 	registerBuildingRoute(routeGroup)
 	registerUserRoutes(routeGroup)
+	registerCommodityRoutes(routeGroup)
 }
