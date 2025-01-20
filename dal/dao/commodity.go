@@ -3,6 +3,7 @@ package dao
 import (
 	"context"
 
+	"github.com/hd2yao/go-mall/common/errcode"
 	"github.com/hd2yao/go-mall/common/util"
 	"github.com/hd2yao/go-mall/dal/model"
 	"github.com/hd2yao/go-mall/logic/do"
@@ -21,7 +22,7 @@ func (cd *CommodityDao) InitCategoryData(categoryDos []*do.CommodityCategory) er
 	categoryModels := make([]*model.CommodityCategory, 0, len(categoryDos))
 	err := util.CopyProperties(&categoryModels, categoryDos)
 	if err != nil {
-		return err
+		return errcode.ErrCoverData
 	}
 	return cd.BulkCreateCommodityCategories(categoryModels)
 }

@@ -37,7 +37,7 @@ func (us *UserDomainSvc) GetUserBaseInfo(userId int64) *do.UserBaseInfo {
 	userBaseInfo := new(do.UserBaseInfo)
 	err = util.CopyProperties(userBaseInfo, user)
 	if err != nil {
-		log.Error("GetUserBaseInfoError", "err", err)
+		log.Error(errcode.ErrCoverData.Msg(), "err", err)
 		return nil
 	}
 	return userBaseInfo
@@ -217,8 +217,7 @@ func (us *UserDomainSvc) RegisterUser(userInfo *do.UserBaseInfo, plainPassword s
 
 	err = util.CopyProperties(userInfo, userModel)
 	if err != nil {
-		err = errcode.Wrap("UserDomainSvcRegisterUserError", err)
-		return nil, err
+		return nil, errcode.ErrCoverData
 	}
 	return userInfo, nil
 }
@@ -363,8 +362,7 @@ func (us *UserDomainSvc) AddUserAddress(addressInfo *do.UserAddressInfo) (*do.Us
 	}
 	err = util.CopyProperties(addressInfo, addressModel)
 	if err != nil {
-		err = errcode.Wrap("AddUserAddress", err)
-		return nil, err
+		return nil, errcode.ErrCoverData
 	}
 	return addressInfo, nil
 }
@@ -383,8 +381,7 @@ func (us *UserDomainSvc) GetUserAddresses(userId int64) ([]*do.UserAddressInfo, 
 	}
 	err = util.CopyProperties(&userAddresses, addresses)
 	if err != nil {
-		err = errcode.Wrap("GetUserAddresses", err)
-		return nil, err
+		return nil, errcode.ErrCoverData
 	}
 	return userAddresses, nil
 }
@@ -400,8 +397,7 @@ func (us *UserDomainSvc) GetUserSingleAddress(userId int64, addressId int64) (*d
 	userAddress := new(do.UserAddressInfo)
 	err = util.CopyProperties(userAddress, address)
 	if err != nil {
-		err = errcode.Wrap("GetUserSingleAddress", err)
-		return nil, err
+		return nil, errcode.ErrCoverData
 	}
 	return userAddress, nil
 }

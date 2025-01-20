@@ -57,7 +57,7 @@ func (cds *CommodityDomainSvc) GetHierarchicCategories() []*do.HierarchicCommodi
 	FlatCategories := make([]*do.HierarchicCommodityCategory, 0, len(categoryModels))
 	err := util.CopyProperties(&FlatCategories, categoryModels)
 	if err != nil {
-		logger.New(cds.ctx).Error("转换成 HierarchicCommodityCategory 失败")
+		logger.New(cds.ctx).Error(errcode.ErrCoverData.Msg(), "err", err)
 		return nil
 	}
 

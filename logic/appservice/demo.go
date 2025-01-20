@@ -43,8 +43,7 @@ func (das *DemoAppSvc) CreateDemoOrders(orderRequest *request.DemoOrderCreate) (
 	demoOrderDo := new(do.DemoOrder)
 	err := util.CopyProperties(demoOrderDo, orderRequest)
 	if err != nil {
-		err = errcode.Wrap("请求转换成 demoOrderDo 失败", err)
-		return nil, err
+		return nil, errcode.ErrCoverData
 	}
 	demoOrder, err := das.demoDomainSvc.CreateDemoOrder(demoOrderDo)
 	if err != nil {
@@ -61,8 +60,7 @@ func (das *DemoAppSvc) CreateDemoOrders(orderRequest *request.DemoOrderCreate) (
 	replyDemoOrder := new(reply.DemoOrder)
 	err = util.CopyProperties(replyDemoOrder, demoOrder)
 	if err != nil {
-		err = errcode.Wrap("demoOrder 转换成 replyDemoOrder 失败", err)
-		return nil, err
+		return nil, errcode.ErrCoverData
 	}
 
 	return replyDemoOrder, err

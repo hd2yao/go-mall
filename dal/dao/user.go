@@ -25,8 +25,7 @@ func (ud *UserDao) CreateUser(userInfo *do.UserBaseInfo, userPasswordHash string
 	userModel := new(model.User)
 	err := util.CopyProperties(userModel, userInfo)
 	if err != nil {
-		err = errcode.Wrap("UserDaoCreateUserError", err)
-		return nil, err
+		return nil, errcode.ErrCoverData
 	}
 	userModel.Password = userPasswordHash
 	err = DBMaster().WithContext(ud.ctx).Create(userModel).Error
@@ -64,8 +63,7 @@ func (ud *UserDao) CreateUserAddress(userAddress *do.UserAddressInfo) (*model.Us
 	addressModel := new(model.UserAddress)
 	err := util.CopyProperties(addressModel, userAddress)
 	if err != nil {
-		err = errcode.Wrap("UserDaoCreateUserAddressError", err)
-		return nil, err
+		return nil, errcode.ErrCoverData
 	}
 
 	// 确定用户是否要更新默认地址
@@ -104,8 +102,7 @@ func (ud *UserDao) UpdateUserAddress(userAddress *do.UserAddressInfo) error {
 	addressModel := new(model.UserAddress)
 	err := util.CopyProperties(addressModel, userAddress)
 	if err != nil {
-		err = errcode.Wrap("UserDaoUpdateUserAddressError", err)
-		return err
+		return errcode.ErrCoverData
 	}
 
 	// 确定用户是否要更新默认地址

@@ -34,8 +34,7 @@ func (us *UserAppSvc) GenToken() (*reply.TokenReply, error) {
 	tokenReply := new(reply.TokenReply)
 	err = util.CopyProperties(tokenReply, token)
 	if err != nil {
-		err = errcode.Wrap("请求转换成 TokenReply 失败", err)
-		return nil, err
+		return nil, errcode.ErrCoverData
 	}
 	return tokenReply, nil
 }
@@ -49,8 +48,7 @@ func (us *UserAppSvc) TokenRefresh(refreshToken string) (*reply.TokenReply, erro
 	tokenReply := new(reply.TokenReply)
 	err = util.CopyProperties(tokenReply, token)
 	if err != nil {
-		err = errcode.Wrap("请求转换成 TokenReply 失败", err)
-		return nil, err
+		return nil, errcode.ErrCoverData
 	}
 	return tokenReply, err
 }
@@ -59,8 +57,7 @@ func (us *UserAppSvc) UserRegister(userRegisterReq *request.UserRegister) error 
 	userInfo := new(do.UserBaseInfo)
 	err := util.CopyProperties(userInfo, userRegisterReq)
 	if err != nil {
-		err = errcode.Wrap("请求转换成 UserBaseInfo 失败", err)
-		return err
+		return errcode.ErrCoverData
 	}
 
 	// 调用 domain service 注册用户
@@ -89,8 +86,11 @@ func (us *UserAppSvc) UserLogin(userLoginReq *request.UserLogin) (*reply.TokenRe
 
 	tokenReply := new(reply.TokenReply)
 	err = util.CopyProperties(tokenReply, tokenInfo)
+	if err != nil {
+		return nil, errcode.ErrCoverData
+	}
 	// TODO: 执行用户登录成功后发送消息通知之类的外围辅助类逻辑
-	return tokenReply, err
+	return tokenReply, nil
 }
 
 func (us *UserAppSvc) UserLogout(userId int64, platform string) error {
@@ -124,7 +124,11 @@ func (us *UserAppSvc) UserInfo(userId int64) *reply.UserInfoReply {
 		return nil
 	}
 	userInfoReply := new(reply.UserInfoReply)
-	util.CopyProperties(userInfoReply, userInfo)
+	err := util.CopyProperties(userInfoReply, userInfo)
+	if err != nil {
+		logger.New(us.ctx).Error(errcode.ErrCoverData.Msg(), "err", err)
+		return nil
+	}
 	// 登录名是敏感数据，做混淆处理
 	userInfoReply.LoginName = util.MaskLoginName(userInfoReply.LoginName)
 	return userInfoReply
@@ -140,7 +144,7 @@ func (us *UserAppSvc) AddUserAddress(request *request.UserAddress, userId int64)
 	userAddressInfo := new(do.UserAddressInfo)
 	err := util.CopyProperties(userAddressInfo, request)
 	if err != nil {
-		return errcode.Wrap("请求转换成 UserAddressInfo 失败", err)
+		return errcode.ErrCoverData
 	}
 	userAddressInfo.UserId = userId
 	newUserAddress, err := us.userDomainSvc.AddUserAddress(userAddressInfo)
@@ -164,8 +168,7 @@ func (us *UserAppSvc) GetUserAddresses(userId int64) ([]*reply.UserAddress, erro
 
 	err = util.CopyProperties(&userAddresses, addresses)
 	if err != nil {
-		err = errcode.Wrap("请求转换成 UserAddress 失败", err)
-		return nil, err
+		return nil, errcode.ErrCoverData
 	}
 
 	// 用户姓名和手机号脱敏
@@ -187,8 +190,7 @@ func (us *UserAppSvc) GetUserSingleAddress(userId, addressId int64) (*reply.User
 	userAddress := new(reply.UserAddress)
 	err = util.CopyProperties(userAddress, addressInfo)
 	if err != nil {
-		err = errcode.Wrap("请求转换成 UserAddress 失败", err)
-		return nil, err
+		return nil, errcode.ErrCoverData
 	}
 	userAddress.MaskedUserName = util.MaskRealName(userAddress.UserName)
 	userAddress.MaskedUserPhone = util.MaskPhone(userAddress.UserPhone)
@@ -201,7 +203,7 @@ func (us *UserAppSvc) ModifyUserAddress(requestData *request.UserAddress, userId
 	userAddressInfo := new(do.UserAddressInfo)
 	err := util.CopyProperties(userAddressInfo, requestData)
 	if err != nil {
-		return errcode.Wrap("请求转换成 UserAddressInfo 失败", err)
+		return errcode.ErrCoverData
 	}
 
 	userAddressInfo.UserId = userId
