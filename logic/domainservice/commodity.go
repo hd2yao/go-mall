@@ -118,3 +118,30 @@ func (cds *CommodityDomainSvc) GetSubCategories(parentId int64) ([]*do.Commodity
 
 	return categories, nil
 }
+
+// InitCommodityData 初始化商品信息测试数据
+func (cds *CommodityDomainSvc) InitCommodityData() error {
+	commodity, err := cds.commodityDao.GetOneCommodity()
+	if err != nil {
+		return errcode.Wrap("初始化商品错误", err)
+	}
+	if commodity.ID > 0 {
+		// 商品表里有数据, 打断流程, 避免重复初始化
+		return errcode.Wrap("重复初始化商品", errors.New("不能重复初始化商品"))
+	}
+
+	initDataFileReader, err := resources.LoadResourceFile("commodity_init_data.json")
+	if err != nil {
+		return errcode.Wrap("初始化商品错误", err)
+	}
+
+	commodityDos := make([]*do.Commodity, 0)
+	decoder := json.NewDecoder(initDataFileReader)
+	decoder.Decode(&commodityDos)
+	err = cds.commodityDao.InitCommodityData(commodityDos)
+	if err != nil {
+		return errcode.Wrap("初始化商品错误", err)
+	}
+
+	return nil
+}

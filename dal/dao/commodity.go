@@ -48,3 +48,25 @@ func (cd *CommodityDao) GetSubCategories(parentId int64) ([]*model.CommodityCate
 		Find(&categories).Error
 	return categories, err
 }
+
+// InitCommodityData 初始化商品数据
+func (cd *CommodityDao) InitCommodityData(commodityDos []*do.Commodity) error {
+	commodityModels := make([]*model.Commodity, 0, len(commodityDos))
+	err := util.CopyProperties(&commodityModels, commodityDos)
+	if err != nil {
+		return errcode.ErrCoverData
+	}
+	return cd.BulkCreateCommodities(commodityModels)
+}
+
+// BulkCreateCommodities 批量创建商品
+func (cd *CommodityDao) BulkCreateCommodities(commodities []*model.Commodity) error {
+	return DBMaster().WithContext(cd.ctx).Create(commodities).Error
+}
+
+// GetOneCommodity 无查询条件，返回一条数据
+func (cd *CommodityDao) GetOneCommodity() (*model.Commodity, error) {
+	commodity := new(model.Commodity)
+	err := DB().WithContext(cd.ctx).Find(commodity).Error
+	return commodity, err
+}

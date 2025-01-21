@@ -25,3 +25,20 @@ type HierarchicCommodityCategory struct {
 	CreatedAt     time.Time                      `json:"created_at"`
 	UpdatedAt     time.Time                      `json:"updated_at"`
 }
+
+type Commodity struct {
+	ID            int64     `json:"id"`
+	Name          string    `json:"name"`
+	Intro         string    `json:"intro"`
+	CategoryId    int64     `json:"category_id"`
+	CoverImg      string    `json:"cover_img"`
+	Images        string    `json:"images"`
+	DetailContent string    `json:"detail_content"`
+	OriginalPrice int       `json:"original_price"`
+	SellingPrice  int       `json:"selling_price"`
+	StockNum      int       `json:"stock_num"`
+	Tag           string    `json:"tag"`
+	SellStatus    int       `json:"sell_status"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}

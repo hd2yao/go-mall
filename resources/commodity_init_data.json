@@ -1425,9 +1425,7 @@
     "stock_num": 999,
     "tag": "",
     "sell_status": 0,
-    "is_del": 0,
-    "created_at": "2019-09-18 13:37:44",
-    "updated_at": "2024-08-16 15:42:18"
+    "is_del": 0
   },
   {
     "name": "华为 HUAWEI 畅享10 Plus",
@@ -1441,9 +1439,7 @@
     "stock_num": 1000,
     "tag": "",
     "sell_status": 0,
-    "is_del": 0,
-    "created_at": "2019-09-18 13:37:44",
-    "updated_at": "2024-08-16 15:42:18"
+    "is_del": 0
   },
   {
     "name": "华为 HUAWEI 畅享10 Plus",
@@ -2717,9 +2713,7 @@
     "stock_num": 100000,
     "tag": "",
     "sell_status": 0,
-    "is_del": 0,
-    "created_at": "2019-09-18 13:37:44",
-    "updated_at": "2024-08-16 15:42:18"
+    "is_del": 0
   },
   {
     "name": "华为 HUAWEI 麦芒 8",
