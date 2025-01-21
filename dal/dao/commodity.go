@@ -70,3 +70,50 @@ func (cd *CommodityDao) GetOneCommodity() (*model.Commodity, error) {
 	err := DB().WithContext(cd.ctx).Find(commodity).Error
 	return commodity, err
 }
+
+// GetCategoryById 获取Id对应的分类信息
+func (cd *CommodityDao) GetCategoryById(categoryId int64) (*model.CommodityCategory, error) {
+	category := new(model.CommodityCategory)
+	err := DB().WithContext(cd.ctx).Where("id = ?", categoryId).Find(category).Error
+	return category, err
+}
+
+// GetThirdLevelCategories 获取指定分类下的所有三级分类 ID
+func (cd *CommodityDao) GetThirdLevelCategories(categoryInfo *do.CommodityCategory) (categoryIds []int64, err error) {
+	if categoryInfo.Level == 3 {
+		return []int64{categoryInfo.ID}, nil
+	} else if categoryInfo.Level == 2 {
+		categoryIds, err = cd.getSubCategoryIdList([]int64{categoryInfo.ID})
+		return
+	} else if categoryInfo.Level == 1 {
+		var secondCategoryId []int64
+		secondCategoryId, err = cd.getSubCategoryIdList([]int64{categoryInfo.ID})
+		if err != nil {
+			return
+		}
+		categoryIds, err = cd.getSubCategoryIdList(secondCategoryId)
+		return
+	}
+	return
+}
+
+// getSubCategoryIdList 查询分类的子分类ID
+func (cd *CommodityDao) getSubCategoryIdList(parentCategoryIds []int64) (categoryIds []int64, err error) {
+	err = DB().WithContext(cd.ctx).Model(&model.CommodityCategory{}).
+		Where("parent_id IN (?)", parentCategoryIds).
+		Order("rank DESC").Pluck("id", &categoryIds).Error
+	return
+}
+
+// GetCommoditiesInCategory 查询分类下的商品列表
+func (cd *CommodityDao) GetCommoditiesInCategory(categoryIds []int64, offset, returnSize int) (commodityList []*model.Commodity, totalRows int64, err error) {
+	// 查询满足条件的商品
+	err = DB().WithContext(cd.ctx).Omit("detail_content"). // 忽略商品详情 detail_content 字段
+								Where("category_id IN (?)", categoryIds).
+								Offset(offset).Limit(returnSize).
+								Find(&commodityList).Error
+	// 查询满足条件的商品总数
+	DB().WithContext(cd.ctx).Model(model.Commodity{}).
+		Where("category_id IN (?)", categoryIds).Count(&totalRows)
+	return
+}

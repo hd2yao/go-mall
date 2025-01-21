@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hd2yao/go-mall/api/reply"
+	"github.com/hd2yao/go-mall/common/app"
 	"github.com/hd2yao/go-mall/common/errcode"
 	"github.com/hd2yao/go-mall/common/logger"
 	"github.com/hd2yao/go-mall/common/util"
@@ -58,4 +59,27 @@ func (cas *CommodityAppSvc) GetSubCategories(parentId int64) []*reply.CommodityC
 	}
 
 	return replyData
+}
+
+// GetCategoryCommodityList 获取分类商品列表
+func (cas *CommodityAppSvc) GetCategoryCommodityList(categoryId int64, pagination *app.Pagination) ([]*reply.CommodityListElem, error) {
+	// 查询分类信息，验证是否有误
+	categoryInfo := cas.commodityDomainSvc.GetCategoryInfo(categoryId)
+	if categoryInfo == nil || categoryInfo.ID == 0 {
+		return nil, errcode.ErrParams
+	}
+
+	// 查询分类下的商品列表
+	commodityList, err := cas.commodityDomainSvc.GetCommodityListInCategory(categoryInfo, pagination)
+	if err != nil {
+		return nil, err
+	}
+
+	replyCommodityList := make([]*reply.CommodityListElem, 0, len(commodityList))
+	err = util.CopyProperties(&replyCommodityList, commodityList)
+	if err != nil {
+		return nil, errcode.ErrCoverData.WithCause(err)
+	}
+
+	return replyCommodityList, nil
 }

@@ -18,3 +18,16 @@ type CommodityCategory struct {
 	IconImg  string `json:"icon_img"`
 	Rank     int    `json:"rank"`
 }
+
+type CommodityListElem struct {
+	ID            int64  `json:"id"`
+	Name          string `json:"name"`
+	Intro         string `json:"intro"`
+	CategoryId    int64  `json:"category_id"`
+	CoverImg      string `json:"cover_img"`
+	OriginalPrice int    `json:"original_price"`
+	SellingPrice  int    `json:"selling_price"`
+	Tag           string `json:"tag"`
+	SellStatus    int    `json:"sell_status"`
+	CreatedAt     string `json:"created_at"`
+}

@@ -1,11 +1,13 @@
 package controller
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/hd2yao/go-mall/common/app"
+	"github.com/hd2yao/go-mall/common/errcode"
 	"github.com/hd2yao/go-mall/logic/appservice"
 )
 
@@ -24,4 +26,22 @@ func GetCategoriesWithParentId(c *gin.Context) {
 	replyData := svc.GetSubCategories(parentId)
 
 	app.NewResponse(c).Success(replyData)
+}
+
+// CommoditiesInCategory 分类商品列表
+func CommoditiesInCategory(c *gin.Context) {
+	categoryId, _ := strconv.ParseInt(c.Query("category_id"), 10, 64)
+	pagination := app.NewPagination(c)
+	svc := appservice.NewCommodityAppSvc(c)
+	commodityList, err := svc.GetCategoryCommodityList(categoryId, pagination)
+	if err != nil {
+		if errors.Is(err, errcode.ErrParams) {
+			app.NewResponse(c).Error(errcode.ErrParams)
+		} else {
+			app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		}
+		return
+	}
+
+	app.NewResponse(c).SetPagination(pagination).Success(commodityList)
 }

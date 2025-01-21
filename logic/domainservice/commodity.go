@@ -6,6 +6,7 @@ import (
 	"errors"
 	"sort"
 
+	"github.com/hd2yao/go-mall/common/app"
 	"github.com/hd2yao/go-mall/common/errcode"
 	"github.com/hd2yao/go-mall/common/logger"
 	"github.com/hd2yao/go-mall/common/util"
@@ -144,4 +145,44 @@ func (cds *CommodityDomainSvc) InitCommodityData() error {
 	}
 
 	return nil
+}
+
+// GetCategoryInfo 获取分类ID对应的分类信息
+func (cds *CommodityDomainSvc) GetCategoryInfo(categoryId int64) *do.CommodityCategory {
+	categoryModel, err := cds.commodityDao.GetCategoryById(categoryId)
+	if err != nil {
+		logger.New(cds.ctx).Error("GetCategoryInfoError", "err", err)
+		return nil
+	}
+
+	categoryInfo := new(do.CommodityCategory)
+	err = util.CopyProperties(categoryInfo, categoryModel)
+	if err != nil {
+		logger.New(cds.ctx).Error(errcode.ErrCoverData.Msg(), "err", err)
+		return nil
+	}
+	return categoryInfo
+}
+
+// GetCommodityListInCategory 获取分类下的商品列表
+func (cds *CommodityDomainSvc) GetCommodityListInCategory(categoryInfo *do.CommodityCategory, pagination *app.Pagination) ([]*do.Commodity, error) {
+	offset := pagination.Offset()
+	size := pagination.GetPageSize()
+	thirdLevelCategoryIds, err := cds.commodityDao.GetThirdLevelCategories(categoryInfo)
+	if err != nil {
+		return nil, errcode.Wrap("GetCommodityListInCategoryError", err)
+	}
+
+	commodityModelList, totalRows, err := cds.commodityDao.GetCommoditiesInCategory(thirdLevelCategoryIds, offset, size)
+	if err != nil {
+		return nil, errcode.Wrap("GetCommodityListInCategoryError", err)
+	}
+
+	pagination.SetTotalRows(int(totalRows))
+	commodityList := make([]*do.Commodity, 0, len(commodityModelList))
+	err = util.CopyProperties(&commodityList, commodityModelList)
+	if err != nil {
+		return nil, errcode.ErrCoverData.WithCause(err)
+	}
+	return commodityList, nil
 }
