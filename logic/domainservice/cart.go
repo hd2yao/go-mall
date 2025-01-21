@@ -22,8 +22,8 @@ func NewCartDomainSvc(ctx context.Context) *CartDomainSvc {
 }
 
 // CartAddItem 添加商品到购物车
-func (c *CartDomainSvc) CartAddItem(cartItem *do.ShoppingCartItem) error {
-	cartItemModel, err := c.cartDao.GetUserCartItemWithCommodityId(cartItem.UserId, cartItem.CommodityId)
+func (cds *CartDomainSvc) CartAddItem(cartItem *do.ShoppingCartItem) error {
+	cartItemModel, err := cds.cartDao.GetUserCartItemWithCommodityId(cartItem.UserId, cartItem.CommodityId)
 	if err != nil {
 		return errcode.Wrap("CartAddItemError", err)
 	}
@@ -31,7 +31,7 @@ func (c *CartDomainSvc) CartAddItem(cartItem *do.ShoppingCartItem) error {
 	// 购物车中已存在该商品
 	if cartItemModel != nil && cartItemModel.CartItemId != 0 {
 		cartItemModel.CommodityNum += cartItem.CommodityNum
-		return c.cartDao.UpdateCartItem(cartItemModel)
+		return cds.cartDao.UpdateCartItem(cartItemModel)
 	}
 
 	err = util.CopyProperties(cartItemModel, cartItem)
@@ -39,5 +39,16 @@ func (c *CartDomainSvc) CartAddItem(cartItem *do.ShoppingCartItem) error {
 		return errcode.ErrCoverData
 	}
 
-	return c.cartDao.AddCartItem(cartItemModel)
+	return cds.cartDao.AddCartItem(cartItemModel)
+}
+
+// GetCheckedCartItems 获取选中的购物项
+func (cds *CartDomainSvc) GetCheckedCartItems(cartItemIds []int64, userId int64) ([]*do.ShoppingCartItem, error) {
+	cartItemModels, err := cds.cartDao.FindCartItems(cartItemIds)
+	if err != nil {
+		return nil, errcode.Wrap("GetCheckedCartItemsError", err)
+	}
+
+	// 确保购物项归属用户与请求用户一致
+
 }

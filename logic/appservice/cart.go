@@ -3,6 +3,7 @@ package appservice
 import (
 	"context"
 
+	"github.com/hd2yao/go-mall/api/reply"
 	"github.com/hd2yao/go-mall/api/request"
 	"github.com/hd2yao/go-mall/common/errcode"
 	"github.com/hd2yao/go-mall/common/util"
@@ -42,4 +43,9 @@ func (cas *CartAppSvc) AddCartItem(request *request.AddCartItem, userId int64) e
 	shoppingCartItem.UserId = userId
 
 	return cas.cartDomainSvc.CartAddItem(shoppingCartItem)
+}
+
+// CheckCartItemBill 查看购物项账单
+func (cas *CartAppSvc) CheckCartItemBill(cartItemIds []int64, userId int64) (*reply.CheckedCartItemBill, error) {
+
 }
