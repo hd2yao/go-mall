@@ -6,13 +6,41 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/hd2yao/go-mall/common/errcode"
 	"github.com/hd2yao/go-mall/common/logger"
 	"github.com/hd2yao/go-mall/common/util"
 )
+
+var (
+	_Client *http.Client
+	once    sync.Once // 确保 HTTP Client 只被初始化一次，避免重复创建 http.Client，节省系统资源
+)
+
+func getHttpClient() *http.Client {
+	once.Do(func() {
+		tr := &http.Transport{
+			// Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			MaxIdleConns:          100,              // 最大空闲连接数
+			IdleConnTimeout:       90 * time.Second, // 空闲连接超时 90 秒
+			MaxIdleConnsPerHost:   50,
+			MaxConnsPerHost:       50,
+			ForceAttemptHTTP2:     true,             // 强制使用 HTTP/2
+			TLSHandshakeTimeout:   10 * time.Second, // TLS 握手超时
+			ExpectContinueTimeout: 1 * time.Second,  // `Expect: 100-Continue` 的超时时间
+		}
+		_Client = &http.Client{Transport: tr}
+	})
+	return _Client
+}
 
 func Request(method string, url string, options ...Option) (httpStatusCode int, respBody []byte, err error) {
 	start := time.Now()
@@ -35,6 +63,7 @@ func Request(method string, url string, options ...Option) (httpStatusCode int, 
 	if err != nil {
 		return
 	}
+	reqOpts.ctx, _ = context.WithTimeout(reqOpts.ctx, reqOpts.timeout) // 设置超时
 	req = req.WithContext(reqOpts.ctx)
 	defer req.Body.Close()
 
@@ -49,7 +78,7 @@ func Request(method string, url string, options ...Option) (httpStatusCode int, 
 	}
 
 	// 发起请求
-	client := &http.Client{Timeout: reqOpts.timeout}
+	client := getHttpClient()
 	resp, err := client.Do(req)
 	if err != nil {
 		return
