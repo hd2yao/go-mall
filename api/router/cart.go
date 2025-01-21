@@ -15,4 +15,6 @@ func registerCartRoutes(rg *gin.RouterGroup) {
 	g.Use(middleware.AuthUser())
 	// 添加到购物车
 	g.POST("add-item", controller.AddCartItem)
+	// 查看购物项账单 -- 确认下单前用来显示商品和支付金额明细
+	g.GET("/item/check-bill", controller.CheckCartItemBill)
 }

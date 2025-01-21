@@ -3,6 +3,9 @@ package appservice
 import (
 	"context"
 
+	"github.com/samber/lo"
+
+	"github.com/hd2yao/go-mall/api/reply"
 	"github.com/hd2yao/go-mall/api/request"
 	"github.com/hd2yao/go-mall/common/errcode"
 	"github.com/hd2yao/go-mall/common/util"
@@ -42,4 +45,25 @@ func (cas *CartAppSvc) AddCartItem(request *request.AddCartItem, userId int64) e
 	shoppingCartItem.UserId = userId
 
 	return cas.cartDomainSvc.CartAddItem(shoppingCartItem)
+}
+
+// CheckCartItemBill 查看购物项账单
+func (cas *CartAppSvc) CheckCartItemBill(cartItemIds []int64, userId int64) (*reply.CheckedCartItemBill, error) {
+	checkedCartItems, err := cas.cartDomainSvc.GetCheckedCartItems(cartItemIds, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	// 计算总价
+	totalPrice := lo.Reduce(checkedCartItems, func(agg int, item *do.ShoppingCartItem, index int) int {
+		return agg + item.CommodityNum*item.CommoditySellingPrice
+	}, 0)
+
+	replyBill := new(reply.CheckedCartItemBill)
+	err = util.CopyProperties(&replyBill.Items, checkedCartItems)
+	if err != nil {
+		return nil, errcode.ErrCoverData.WithCause(err)
+	}
+	replyBill.TotalPrice = totalPrice
+	return replyBill, nil
 }
