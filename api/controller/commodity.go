@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/hd2yao/go-mall/api/request"
 	"github.com/hd2yao/go-mall/common/app"
 	"github.com/hd2yao/go-mall/common/errcode"
 	"github.com/hd2yao/go-mall/logic/appservice"
@@ -44,4 +45,41 @@ func CommoditiesInCategory(c *gin.Context) {
 	}
 
 	app.NewResponse(c).SetPagination(pagination).Success(commodityList)
+}
+
+// CommoditySearch 搜索商品
+func CommoditySearch(c *gin.Context) {
+	searchQuery := new(request.CommoditySearch)
+	if err := c.ShouldBindQuery(searchQuery); err != nil {
+		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
+		return
+	}
+
+	pagination := app.NewPagination(c)
+	svc := appservice.NewCommodityAppSvc(c)
+	commodityList, err := svc.SearchCommodity(searchQuery.Keyword, pagination)
+	if err != nil {
+		app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		return
+	}
+
+	app.NewResponse(c).SetPagination(pagination).Success(commodityList)
+}
+
+// CommodityInfo 获取商品详情
+func CommodityInfo(c *gin.Context) {
+	commodityId, _ := strconv.ParseInt(c.Param("commodity_id"), 10, 64)
+	if commodityId <= 0 {
+		app.NewResponse(c).Error(errcode.ErrParams)
+		return
+	}
+
+	svc := appservice.NewCommodityAppSvc(c)
+	commodityInfo := svc.CommodityInfo(commodityId)
+	if commodityInfo == nil {
+		app.NewResponse(c).Error(errcode.ErrParams)
+		return
+	}
+
+	app.NewResponse(c).Success(commodityInfo)
 }

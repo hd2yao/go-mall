@@ -83,3 +83,34 @@ func (cas *CommodityAppSvc) GetCategoryCommodityList(categoryId int64, paginatio
 
 	return replyCommodityList, nil
 }
+
+// SearchCommodity 商品搜索
+func (cas *CommodityAppSvc) SearchCommodity(keyword string, pagination *app.Pagination) ([]*reply.CommodityListElem, error) {
+	commodityList, err := cas.commodityDomainSvc.SearchCommodity(keyword, pagination)
+	if err != nil {
+		return nil, err
+	}
+	replyCommodityList := make([]*reply.CommodityListElem, 0, len(commodityList))
+	err = util.CopyProperties(&replyCommodityList, &commodityList)
+	if err != nil {
+		return nil, errcode.ErrCoverData.WithCause(err)
+	}
+
+	return replyCommodityList, nil
+}
+
+// CommodityInfo 商品详情
+func (cas *CommodityAppSvc) CommodityInfo(commodityId int64) *reply.Commodity {
+	commodityDO := cas.commodityDomainSvc.GetCommodityInfo(commodityId)
+	if commodityDO == nil || commodityDO.ID == 0 {
+		return nil
+	}
+
+	commodityInfo := new(reply.Commodity)
+	err := util.CopyProperties(commodityInfo, commodityDO)
+	if err != nil {
+		logger.New(cas.ctx).Error(errcode.ErrCoverData.Msg(), "err", err)
+		return nil
+	}
+	return commodityInfo
+}

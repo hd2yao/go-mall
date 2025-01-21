@@ -117,3 +117,21 @@ func (cd *CommodityDao) GetCommoditiesInCategory(categoryIds []int64, offset, re
 		Where("category_id IN (?)", categoryIds).Count(&totalRows)
 	return
 }
+
+// FindCommodityWithNameKeyword 按名称LIKE查询商品列表
+func (cd *CommodityDao) FindCommodityWithNameKeyword(keyword string, offset, returnSize int) (commodityList []*model.Commodity, totalRows int64, err error) {
+	err = DB().WithContext(cd.ctx).Omit("detail_content").
+		Where("name LIKE ?", "%"+keyword+"%").
+		Offset(offset).Limit(returnSize).
+		Find(&commodityList).Error
+	DB().WithContext(cd.ctx).Model(model.Commodity{}).Where("name LIKE ?", "%"+keyword+"%").Count(&totalRows)
+	return
+}
+
+// FindCommodityById 通过ID查商品信息
+func (cd *CommodityDao) FindCommodityById(commodityId int64) (*model.Commodity, error) {
+	commodity := new(model.Commodity)
+	err := DB().WithContext(cd.ctx).Omit("detail_content").
+		Where("id = ?", commodityId).Find(commodity).Error
+	return commodity, err
+}

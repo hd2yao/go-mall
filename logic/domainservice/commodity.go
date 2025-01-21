@@ -186,3 +186,40 @@ func (cds *CommodityDomainSvc) GetCommodityListInCategory(categoryInfo *do.Commo
 	}
 	return commodityList, nil
 }
+
+// SearchCommodity 商品搜索
+func (cds *CommodityDomainSvc) SearchCommodity(keyword string, pagination *app.Pagination) ([]*do.Commodity, error) {
+	offset := pagination.Offset()
+	size := pagination.GetPageSize()
+	commodityModelList, totalRows, err := cds.commodityDao.FindCommodityWithNameKeyword(keyword, offset, size)
+	if err != nil {
+		return nil, errcode.Wrap("SearchCommodityError", err)
+	}
+	pagination.SetTotalRows(int(totalRows))
+
+	commodityList := make([]*do.Commodity, 0, len(commodityModelList))
+	err = util.CopyProperties(&commodityList, commodityModelList)
+	if err != nil {
+		return nil, errcode.ErrCoverData.WithCause(err)
+	}
+
+	return commodityList, nil
+}
+
+// GetCommodityInfo 获取商品详情
+func (cds *CommodityDomainSvc) GetCommodityInfo(commodityId int64) *do.Commodity {
+	commodityModel, err := cds.commodityDao.FindCommodityById(commodityId)
+	log := logger.New(cds.ctx)
+	if err != nil {
+		log.Error("GetCommodityInfoError", "err", err)
+		return nil
+	}
+
+	commodity := new(do.Commodity)
+	err = util.CopyProperties(commodity, commodityModel)
+	if err != nil {
+		log.Error(errcode.ErrCoverData.Error(), "err", err)
+		return nil
+	}
+	return commodity
+}
