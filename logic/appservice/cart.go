@@ -47,6 +47,16 @@ func (cas *CartAppSvc) AddCartItem(request *request.AddCartItem, userId int64) e
 	return cas.cartDomainSvc.CartAddItem(shoppingCartItem)
 }
 
+// UpdateCartItem 更新购物项
+func (cas *CartAppSvc) UpdateCartItem(request *request.CartItemUpdate, userId int64) error {
+	return cas.cartDomainSvc.CartUpdateItem(request, userId)
+}
+
+// DeleteUserCartItem 删除用户购物车中的购物项, 只能删除单个购物项
+func (cas *CartAppSvc) DeleteUserCartItem(cartItemId, userId int64) error {
+	return cas.cartDomainSvc.DeleteUserCartItem(cartItemId, userId)
+}
+
 // CheckCartItemBill 查看购物项账单
 func (cas *CartAppSvc) CheckCartItemBill(cartItemIds []int64, userId int64) (*reply.CheckedCartItemBill, error) {
 	checkedCartItems, err := cas.cartDomainSvc.GetCheckedCartItems(cartItemIds, userId)

@@ -24,6 +24,13 @@ func (cd *CartDao) GetUserCartItemWithCommodityId(userId, commodityId int64) (*m
 	return cartItem, err
 }
 
+// GetCartItemById 根据购物项 ID 获取信息
+func (cd *CartDao) GetCartItemById(cartItemId int64) (*model.ShoppingCartItem, error) {
+	cartItem := new(model.ShoppingCartItem)
+	err := DB().WithContext(cd.ctx).Where(model.ShoppingCartItem{CartItemId: cartItemId}, "CartItemId").Find(&cartItem).Error
+	return cartItem, err
+}
+
 // FindCartItems 获取多个ID指定的购物项
 func (cd *CartDao) FindCartItems(cartItemIdList []int64) ([]*model.ShoppingCartItem, error) {
 	items := make([]*model.ShoppingCartItem, 0)
@@ -40,4 +47,9 @@ func (cd *CartDao) UpdateCartItem(cartItem *model.ShoppingCartItem) error {
 // AddCartItem 添加购物车购物项
 func (cd *CartDao) AddCartItem(cartItem *model.ShoppingCartItem) error {
 	return DBMaster().WithContext(cd.ctx).Create(cartItem).Error
+}
+
+// DeleteCartItem 删除购物车购物项
+func (cd *CartDao) DeleteCartItem(cartItem *model.ShoppingCartItem) error {
+	return DBMaster().WithContext(cd.ctx).Delete(cartItem).Error
 }

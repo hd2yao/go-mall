@@ -5,6 +5,7 @@ import (
 
 	"github.com/samber/lo"
 
+	"github.com/hd2yao/go-mall/api/request"
 	"github.com/hd2yao/go-mall/common/errcode"
 	"github.com/hd2yao/go-mall/common/logger"
 	"github.com/hd2yao/go-mall/common/util"
@@ -44,6 +45,52 @@ func (cds *CartDomainSvc) CartAddItem(cartItem *do.ShoppingCartItem) error {
 	}
 
 	return cds.cartDao.AddCartItem(cartItemModel)
+}
+
+// CartUpdateItem 更改购物项
+func (cds *CartDomainSvc) CartUpdateItem(request *request.CartItemUpdate, userId int64) error {
+	// 查询购物项信息
+	cartItemModel, err := cds.cartDao.GetCartItemById(request.ItemId)
+	if err != nil {
+		return errcode.Wrap("CartUpdateItemError", err)
+	}
+
+	// 用户不匹配，商品不匹配
+	if cartItemModel == nil || cartItemModel.UserId != userId {
+		logger.New(cds.ctx).Error("DataMatchError", "cartItem", cartItemModel, "request", request, "requestUserId", userId)
+		return errcode.ErrCartWrongUser
+	}
+
+	// 更新购物项信息
+	cartItemModel.CommodityNum = request.CommodityNum
+	err = cds.cartDao.UpdateCartItem(cartItemModel)
+	if err != nil {
+		return errcode.Wrap("CartUpdateItemError", err)
+	}
+
+	return nil
+}
+
+// DeleteUserCartItem 删除购物项
+func (cds *CartDomainSvc) DeleteUserCartItem(cartItemId, userId int64) error {
+	// 查询购物项信息
+	cartItemModel, err := cds.cartDao.GetCartItemById(cartItemId)
+	if err != nil {
+		return errcode.Wrap("CartDeleteItemError", err)
+	}
+
+	// 用户不匹配，商品不匹配
+	if cartItemModel == nil || cartItemModel.UserId != userId {
+		logger.New(cds.ctx).Error("DataMatchError", "cartItem", cartItemModel, "cartItemId", cartItemId, "requestUserId", userId)
+		return errcode.ErrCartWrongUser
+	}
+
+	err = cds.cartDao.DeleteCartItem(cartItemModel)
+	if err != nil {
+		return errcode.Wrap("CartDeleteItemError", err)
+	}
+
+	return nil
 }
 
 // GetCheckedCartItems 获取选中的购物项

@@ -15,6 +15,10 @@ func registerCartRoutes(rg *gin.RouterGroup) {
 	g.Use(middleware.AuthUser())
 	// 添加到购物车
 	g.POST("add-item", controller.AddCartItem)
+	// 修改购物车中的商品数量
+	g.PATCH("update-item", controller.UpdateCartItem)
+	// 删除购物项
+	g.DELETE("/item/:item_id", controller.DeleteUserCartItem)
 	// 查看购物项账单 -- 确认下单前用来显示商品和支付金额明细
 	g.GET("/item/check-bill", controller.CheckCartItemBill)
 }
