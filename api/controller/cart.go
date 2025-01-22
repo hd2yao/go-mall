@@ -13,6 +13,18 @@ import (
 	"github.com/hd2yao/go-mall/logic/appservice"
 )
 
+// UserCartItems 获取用户购物车中的购物项
+func UserCartItems(c *gin.Context) {
+	cartAppSvc := appservice.NewCartAppSvc(c)
+	replyCartItems, err := cartAppSvc.GetUserCartItems(c.GetInt64("user_id"))
+	if err != nil {
+		app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		return
+	}
+
+	app.NewResponse(c).Success(replyCartItems)
+}
+
 // AddCartItem 添加购物车
 func AddCartItem(c *gin.Context) {
 	requestData := new(request.AddCartItem)

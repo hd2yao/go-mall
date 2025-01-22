@@ -26,6 +26,27 @@ func NewCartDomainSvc(ctx context.Context) *CartDomainSvc {
 	}
 }
 
+// GetUserCartItems 获取用户购物车里的购物项
+func (cds *CartDomainSvc) GetUserCartItems(userId int64) ([]*do.ShoppingCartItem, error) {
+	cartItemModels, err := cds.cartDao.GetUserCartItems(userId)
+
+	if err != nil {
+		return nil, errcode.Wrap("GetUserCartItemsError", err)
+	}
+
+	userCartItems := make([]*do.ShoppingCartItem, 0, len(cartItemModels))
+	err = util.CopyProperties(&userCartItems, cartItemModels)
+	if err != nil {
+		return nil, errcode.ErrCoverData.WithCause(err)
+	}
+
+	err = cds.fillInCommodityInfo(userCartItems)
+	if err != nil {
+		return nil, err
+	}
+	return userCartItems, nil
+}
+
 // CartAddItem 添加商品到购物车
 func (cds *CartDomainSvc) CartAddItem(cartItem *do.ShoppingCartItem) error {
 	cartItemModel, err := cds.cartDao.GetUserCartItemWithCommodityId(cartItem.UserId, cartItem.CommodityId)

@@ -13,6 +13,8 @@ func registerCartRoutes(rg *gin.RouterGroup) {
 	// 这个路由组中的路由都以 /cart/ 开头, 并且都需要身份验证
 	g := rg.Group("/cart/")
 	g.Use(middleware.AuthUser())
+	// 用户购物车中的购物项列表
+	g.GET("item/", controller.UserCartItems)
 	// 添加到购物车
 	g.POST("add-item", controller.AddCartItem)
 	// 修改购物车中的商品数量

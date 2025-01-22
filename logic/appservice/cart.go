@@ -25,6 +25,22 @@ func NewCartAppSvc(ctx context.Context) *CartAppSvc {
 	}
 }
 
+// GetUserCartItems 获取用户购物车中的购物项
+func (cas *CartAppSvc) GetUserCartItems(userId int64) ([]*reply.CartItem, error) {
+	cartItems, err := cas.cartDomainSvc.GetUserCartItems(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	replyCartItems := make([]*reply.CartItem, 0, len(cartItems))
+	err = util.CopyProperties(&replyCartItems, cartItems)
+	if err != nil {
+		return nil, errcode.ErrCoverData.WithCause(err)
+	}
+
+	return replyCartItems, nil
+}
+
 // AddCartItem 添加商品到购物车
 func (cas *CartAppSvc) AddCartItem(request *request.AddCartItem, userId int64) error {
 	commodityDomainSvc := domainservice.NewCommodityDomainSvc(cas.ctx)
