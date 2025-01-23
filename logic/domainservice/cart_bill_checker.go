@@ -94,6 +94,8 @@ func (n *cartCommonChecker) SetNext(handler cartBillCheckHandler) cartBillCheckH
 	return handler
 }
 
+// RunChecker 启动责任链，并传递给 nextHandler
+// 执行 nextHandler，若无误，则调用 RunChecker 进行传递
 func (n *cartCommonChecker) RunChecker(billChecker *CartBillChecker) error {
 	if n.nextHandler != nil {
 		if err := n.nextHandler.Check(billChecker); err != nil {
@@ -105,12 +107,19 @@ func (n *cartCommonChecker) RunChecker(billChecker *CartBillChecker) error {
 	return nil
 }
 
+//func (n *cartCommonChecker) Check(cbc *CartBillChecker) error {
+//	fmt.Println("1111111111111111111111")
+//	return nil
+//}
+
 type checkerStarter struct {
 	cartCommonChecker
 }
 
+// Check 空方法，什么也不做，目的是让抽象类的 RunChecker 能启动调用链
 func (cs *checkerStarter) Check(cbc *CartBillChecker) error {
-	// 空Handler 这里什么也不做, 目的是让抽象类的 RunChecker 能启动调用链
+	// 这里是因为，RunChecker 是从 nextHandler 开始的，所以设置一个 checkerStarter
+	// 可简单理解为 dummy head，链表中的虚拟头节点
 	return nil
 }
 
@@ -119,6 +128,7 @@ type couponChecker struct {
 	cartCommonChecker
 }
 
+// Check 检查优惠券，如果用户有可用优惠券，则设置到 CartBillChecker 中，在本项目中可理解为执行 execute
 func (cc *couponChecker) Check(cbc *CartBillChecker) error {
 	// TODO: 查询用户是否有可用优惠券
 	// 这里是 Mock 逻辑
@@ -141,6 +151,7 @@ type discountChecker struct {
 	cartCommonChecker
 }
 
+// Check 检查折扣减免，如果用户有可用折扣减免，则设置到 CartBillChecker 中，在本项目中可理解为执行 execute
 func (dc *discountChecker) Check(cbc *CartBillChecker) error {
 	// TODO: 查用户是否有可用的减免活动
 	// 这里是Mock逻辑
@@ -163,6 +174,7 @@ type vipChecker struct {
 	cartCommonChecker
 }
 
+// Check 检查 VIP，如果用户是 VIP，则设置到 CartBillChecker 中，在本项目中可理解为执行 execute
 func (vc *vipChecker) Check(cbc *CartBillChecker) error {
 	// TODO: 判断用户是不是会员, 有没有会员折扣
 	//if isVip(userId) {
