@@ -2,6 +2,11 @@ package dao
 
 import (
 	"context"
+	"errors"
+	"strconv"
+
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/hd2yao/go-mall/common/errcode"
 	"github.com/hd2yao/go-mall/common/util"
@@ -141,4 +146,26 @@ func (cd *CommodityDao) FindCommodities(commodityIdList []int64) ([]*model.Commo
 	commodities := make([]*model.Commodity, 0)
 	err := DB().WithContext(cd.ctx).Find(&commodities, commodityIdList).Error
 	return commodities, err
+}
+
+// ReduceStuckInOrderCreate 创建订单后商品减库存
+func (cd *CommodityDao) ReduceStuckInOrderCreate(tx *gorm.DB, orderItems []*do.OrderItem) error {
+	for _, orderItem := range orderItems {
+		commodity := new(model.Commodity)
+		// SELECT FOR UPDATE 当前读
+		tx.Clauses(clause.Locking{Strength: "UPDATE"}).WithContext(cd.ctx).
+			Find(commodity, orderItem.CommodityId)
+		newStock := commodity.StockNum - orderItem.CommodityNum
+		if newStock < 0 {
+			return errcode.ErrCommodityStockOut.WithCause(errors.New("商品缺少库存，商品 ID:" + strconv.FormatInt(commodity.ID, 10)))
+		}
+		commodity.StockNum = newStock
+		// https://gorm.io/docs/update.html#Update-single-column
+		err := tx.WithContext(cd.ctx).Model(commodity).Update("stock_num", newStock).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -3,6 +3,8 @@ package dao
 import (
 	"context"
 
+	"gorm.io/gorm"
+
 	"github.com/hd2yao/go-mall/dal/model"
 )
 
@@ -20,6 +22,8 @@ func (cd *CartDao) GetUserCartItemWithCommodityId(userId, commodityId int64) (*m
 	err := DB().WithContext(cd.ctx).Where(
 		model.ShoppingCartItem{UserId: userId, CommodityId: commodityId},
 		"UserId", "CommodityId"). // 保证Struct中的UserId, CommodityId为零值时仍用他们构建查询条件
+		// 使用 Struct 作为 Where 的参数时 最好指定要搜索的字段，否则字段值为零值时不会用来构建查询条件
+		// 文档 https://gorm.io/docs/query.html#Specify-Struct-search-fields
 		Find(&cartItem).Error
 	return cartItem, err
 }
@@ -59,4 +63,9 @@ func (cd *CartDao) AddCartItem(cartItem *model.ShoppingCartItem) error {
 // DeleteCartItem 删除购物车购物项
 func (cd *CartDao) DeleteCartItem(cartItem *model.ShoppingCartItem) error {
 	return DBMaster().WithContext(cd.ctx).Delete(cartItem).Error
+}
+
+// DeleteMultiCartItemInTx 创建订单后调用该方法删除购物项
+func (cd *CartDao) DeleteMultiCartItemInTx(tx *gorm.DB, cartIdList []int64) error {
+	return tx.WithContext(cd.ctx).Delete(&model.ShoppingCartItem{}, cartIdList).Error
 }
