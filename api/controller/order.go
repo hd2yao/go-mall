@@ -36,3 +36,15 @@ func OrderCreate(c *gin.Context) {
 
 	app.NewResponse(c).Success(reply)
 }
+
+// UserOrders 用户订单列表
+func UserOrders(c *gin.Context) {
+	pagination := app.NewPagination(c)
+	orderAppSvc := appservice.NewOrderAppSvc(c)
+	replyOrders, err := orderAppSvc.GetUserOrders(c.GetInt64("user_id"), pagination)
+	if err != nil {
+		app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		return
+	}
+	app.NewResponse(c).Success(replyOrders)
+}

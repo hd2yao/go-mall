@@ -13,4 +13,6 @@ func registerOrderRoutes(rg *gin.RouterGroup) {
 	g.Use(middleware.AuthUser())
 	// 创建订单
 	g.POST("create", controller.OrderCreate)
+	// 用户订单列表
+	g.GET("user-order/", controller.UserOrders)
 }

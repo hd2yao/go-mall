@@ -5,6 +5,10 @@ import (
 
 	"github.com/hd2yao/go-mall/api/reply"
 	"github.com/hd2yao/go-mall/api/request"
+	"github.com/hd2yao/go-mall/common/app"
+	"github.com/hd2yao/go-mall/common/enum"
+	"github.com/hd2yao/go-mall/common/errcode"
+	"github.com/hd2yao/go-mall/common/util"
 	"github.com/hd2yao/go-mall/logic/domainservice"
 )
 
@@ -20,6 +24,7 @@ func NewOrderAppSvc(ctx context.Context) *OrderAppSvc {
 	}
 }
 
+// CreateOrder 创建订单
 func (oas *OrderAppSvc) CreateOrder(orderRequest *request.OrderCreate, userId int64) (*reply.OrderCreateReply, error) {
 	// 通过购物项 ID 获取用户添加在购物车中的购物项
 	cartDomainSvc := domainservice.NewCartDomainSvc(oas.ctx)
@@ -44,4 +49,25 @@ func (oas *OrderAppSvc) CreateOrder(orderRequest *request.OrderCreate, userId in
 	orderReply := new(reply.OrderCreateReply)
 	orderReply.OrderNo = order.OrderNo
 	return orderReply, nil
+}
+
+// GetUserOrders 查询用户订单
+func (oas *OrderAppSvc) GetUserOrders(userId int64, pagination *app.Pagination) ([]*reply.Order, error) {
+	orders, err := oas.orderDomainSvc.GetUserOrders(userId, pagination)
+	if err != nil {
+		return nil, err
+	}
+
+	replyOrders := make([]*reply.Order, 0, len(orders))
+	if err = util.CopyProperties(&replyOrders, &orders); err != nil {
+		return nil, errcode.ErrCoverData.WithCause(err)
+	}
+
+	for _, replyOrder := range replyOrders {
+		// 订单的前台状态
+		replyOrder.FrontStatus = enum.OrderFrontStatus[replyOrder.OrderStatus]
+		replyOrder.Address.UserName = util.MaskPhone(replyOrder.Address.UserName)
+		replyOrder.Address.UserPhone = util.MaskPhone(replyOrder.Address.UserPhone)
+	}
+	return replyOrders, nil
 }

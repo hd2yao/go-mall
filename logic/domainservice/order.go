@@ -5,6 +5,7 @@ import (
 
 	"github.com/samber/lo"
 
+	"github.com/hd2yao/go-mall/common/app"
 	"github.com/hd2yao/go-mall/common/enum"
 	"github.com/hd2yao/go-mall/common/errcode"
 	"github.com/hd2yao/go-mall/common/util"
@@ -94,4 +95,50 @@ func (ods *OrderDomainSvc) CreateOrder(items []*do.ShoppingCartItem, userAddress
 	panicked = false
 
 	return order, nil
+}
+
+// GetUserOrders 获取用户订单
+func (ods *OrderDomainSvc) GetUserOrders(userId int64, pagination *app.Pagination) ([]*do.Order, error) {
+	offset := pagination.Offset()
+	size := pagination.GetPageSize()
+
+	// 查询用户订单
+	orderModels, totalRow, err := ods.orderDao.GetUserOrders(userId, offset, size)
+	if err != nil {
+		return nil, errcode.Wrap("GetUserOrdersError", err)
+	}
+	pagination.SetTotalRows(int(totalRow))
+	orders := make([]*do.Order, 0, len(orderModels))
+	if err = util.CopyProperties(&orders, &orderModels); err != nil {
+		return nil, errcode.ErrCoverData.WithCause(err)
+	}
+
+	// 提取所有订单 ID
+	orderIds := lo.Map(orders, func(order *do.Order, index int) int64 {
+		return order.ID
+	})
+	// 查询订单的地址
+	ordersAddressMap, err := ods.orderDao.GetMultiOrdersAddress(orderIds)
+	if err != nil {
+		return nil, errcode.Wrap("GetUserOrdersError", err)
+	}
+	// 查询订单明细
+	ordersItemMap, err := ods.orderDao.GetMultiOrdersItems(orderIds)
+	if err != nil {
+		return nil, errcode.Wrap("GetUserOrdersError", err)
+	}
+
+	// 填充 Order 中的 Address 和 Items
+	for _, order := range orders {
+		order.Address = new(do.OrderAddress) // 先初始化
+		if err = util.CopyProperties(order.Address, ordersAddressMap[order.ID]); err != nil {
+			return nil, errcode.ErrCoverData.WithCause(err)
+		}
+		orderItems := ordersItemMap[order.ID]
+		if err = util.CopyProperties(&order.Items, &orderItems); err != nil {
+			return nil, errcode.ErrCoverData.WithCause(err)
+		}
+	}
+
+	return orders, nil
 }
