@@ -118,3 +118,30 @@ func (od *OrderDao) GetMultiOrdersItems(orderIds []int64) (map[int64][]*model.Or
 
 	return orderItemsMap, nil
 }
+
+// GetOrderByNo 根据订单号获取订单信息
+func (od *OrderDao) GetOrderByNo(orderNo string) (*model.Order, error) {
+	order := new(model.Order)
+	err := DB().WithContext(od.ctx).Where("order_no = ?", orderNo).
+		Find(order).Error
+
+	return order, err
+}
+
+// GetOrderAddress 根据订单 ID 获取订单地址信息
+func (od *OrderDao) GetOrderAddress(orderId int64) (*model.OrderAddress, error) {
+	orderAddress := new(model.OrderAddress)
+	err := DB().WithContext(od.ctx).Where("order_id = ?", orderId).
+		Find(orderAddress).Error
+
+	return orderAddress, err
+}
+
+// GetOrderItems 根据订单 ID 获取订单商品详情
+func (od *OrderDao) GetOrderItems(orderId int64) ([]*model.OrderItem, error) {
+	orderItems := make([]*model.OrderItem, 0)
+	err := DB().WithContext(od.ctx).Where("order_id = ?", orderId).
+		Find(&orderItems).Error
+
+	return orderItems, err
+}

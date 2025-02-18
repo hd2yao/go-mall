@@ -142,3 +142,38 @@ func (ods *OrderDomainSvc) GetUserOrders(userId int64, pagination *app.Paginatio
 
 	return orders, nil
 }
+
+// GetSpecifiedUserOrder 获取 orderNo 对应的用户订单详情
+func (ods *OrderDomainSvc) GetSpecifiedUserOrder(orderNo string, userId int64) (*do.Order, error) {
+	orderModel, err := ods.orderDao.GetOrderByNo(orderNo)
+	if err != nil {
+		return nil, errcode.Wrap("GetSpecifiedUserOrderError", err)
+	}
+	if orderModel == nil || orderModel.UserId != userId {
+		return nil, errcode.ErrOrderParams
+	}
+
+	order := do.OrderNew()
+	if err = util.CopyProperties(order, orderModel); err != nil {
+		return nil, errcode.ErrCoverData.WithCause(err)
+	}
+
+	// 查询订单的地址
+	orderAddress, err := ods.orderDao.GetOrderAddress(orderModel.ID)
+	if err != nil {
+		return nil, errcode.Wrap("GetSpecifiedUserOrderError", err)
+	}
+	if err = util.CopyProperties(order.Address, orderAddress); err != nil {
+		return nil, errcode.ErrCoverData.WithCause(err)
+	}
+	// 订单购物明细
+	orderItems, err := ods.orderDao.GetOrderItems(orderModel.ID)
+	if err != nil {
+		return nil, errcode.Wrap("GetSpecifiedUserOrderError", err)
+	}
+	if err = util.CopyProperties(&order.Items, &orderItems); err != nil {
+		return nil, errcode.ErrCoverData.WithCause(err)
+	}
+
+	return order, nil
+}

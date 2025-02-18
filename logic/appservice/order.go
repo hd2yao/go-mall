@@ -71,3 +71,24 @@ func (oas *OrderAppSvc) GetUserOrders(userId int64, pagination *app.Pagination) 
 	}
 	return replyOrders, nil
 }
+
+// GetOrderInfo 订单详情
+func (oas *OrderAppSvc) GetOrderInfo(orderNo string, userId int64) (*reply.Order, error) {
+	order, err := oas.orderDomainSvc.GetSpecifiedUserOrder(orderNo, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	replyOrder := new(reply.Order)
+	if err = util.CopyProperties(replyOrder, order); err != nil {
+		return nil, errcode.ErrCoverData.WithCause(err)
+	}
+
+	// 订单的前台状态
+	replyOrder.FrontStatus = enum.OrderFrontStatus[replyOrder.OrderStatus]
+	// 敏感信息脱敏
+	replyOrder.Address.UserName = util.MaskRealName(replyOrder.Address.UserName)
+	replyOrder.Address.UserPhone = util.MaskPhone(replyOrder.Address.UserPhone)
+
+	return replyOrder, nil
+}

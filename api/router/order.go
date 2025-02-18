@@ -15,4 +15,6 @@ func registerOrderRoutes(rg *gin.RouterGroup) {
 	g.POST("create", controller.OrderCreate)
 	// 用户订单列表
 	g.GET("user-order/", controller.UserOrders)
+	// 订单详情
+	g.GET(":order_no/info", controller.OrderInfo)
 }

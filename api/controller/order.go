@@ -48,3 +48,20 @@ func UserOrders(c *gin.Context) {
 	}
 	app.NewResponse(c).Success(replyOrders)
 }
+
+// OrderInfo 订单详情
+func OrderInfo(c *gin.Context) {
+	orderNo := c.Param("order_no")
+	orderAppSvc := appservice.NewOrderAppSvc(c)
+	replyOrder, err := orderAppSvc.GetOrderInfo(orderNo, c.GetInt64("user_id"))
+	if err != nil {
+		if errors.Is(err, errcode.ErrOrderParams) {
+			app.NewResponse(c).Error(errcode.ErrOrderParams)
+		} else {
+			app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		}
+		return
+	}
+
+	app.NewResponse(c).Success(replyOrder)
+}
