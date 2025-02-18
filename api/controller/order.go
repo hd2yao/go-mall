@@ -65,3 +65,22 @@ func OrderInfo(c *gin.Context) {
 
 	app.NewResponse(c).Success(replyOrder)
 }
+
+// OrderCancel 用户主动取消订单
+func OrderCancel(c *gin.Context) {
+	orderNo := c.Param("order_no")
+	orderAppSvc := appservice.NewOrderAppSvc(c)
+	err := orderAppSvc.CancelOrder(orderNo, c.GetInt64("user_id"))
+	if err != nil {
+		if errors.Is(err, errcode.ErrOrderParams) {
+			app.NewResponse(c).Error(errcode.ErrOrderParams)
+		} else if errors.Is(err, errcode.ErrOrderCanNotBeChanged) {
+			app.NewResponse(c).Error(errcode.ErrOrderCanNotBeChanged)
+		} else {
+			app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		}
+		return
+	}
+
+	app.NewResponse(c).SuccessOk()
+}

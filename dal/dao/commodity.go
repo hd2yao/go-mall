@@ -3,6 +3,7 @@ package dao
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 
 	"gorm.io/gorm"
@@ -168,4 +169,27 @@ func (cd *CommodityDao) ReduceStuckInOrderCreate(tx *gorm.DB, orderItems []*do.O
 	}
 
 	return nil
+}
+
+// RecoverOrderCommodityStuck 用户取消订单后商品减库存
+func (cd *CommodityDao) RecoverOrderCommodityStuck(orderItems []*do.OrderItem) error {
+	err := DBMaster().Transaction(func(tx *gorm.DB) error {
+		for _, orderItem := range orderItems {
+			commodity := new(model.Commodity)
+			tx.Clauses(clause.Locking{Strength: "UPDATE"}).WithContext(cd.ctx).
+				Find(commodity, orderItem.CommodityId)
+			if commodity.ID == 0 {
+				return errcode.ErrNotFound.WithCause(errors.New(fmt.Sprintf("商品未找到, ID: %d", orderItem.CommodityId)))
+			}
+
+			newStock := commodity.StockNum + orderItem.CommodityNum
+			err := tx.WithContext(cd.ctx).Model(commodity).Update("stock_num", newStock).Error
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+
+	return err
 }

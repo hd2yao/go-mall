@@ -177,3 +177,26 @@ func (ods *OrderDomainSvc) GetSpecifiedUserOrder(orderNo string, userId int64) (
 
 	return order, nil
 }
+
+// CancelUserOrder 用户取消订单
+func (ods *OrderDomainSvc) CancelUserOrder(orderNo string, userId int64) error {
+	order, err := ods.GetSpecifiedUserOrder(orderNo, userId)
+	if err != nil {
+		return err
+	}
+	if order.OrderStatus >= enum.OrderStatusPaid {
+		// 已经支付，用户不能取消 -- 需要申请退款
+		return errcode.ErrOrderCanNotBeChanged
+	}
+
+	// 更新订单状态为用户主动取消
+	err = ods.orderDao.UpdateOrderStatus(order.ID, enum.OrderStatusUserQuit)
+	if err != nil {
+		return errcode.Wrap("CancelUserOrderError", err)
+	}
+
+	// 恢复商品库存
+	commodityDao := dao.NewCommodityDao(ods.ctx)
+	err = commodityDao.RecoverOrderCommodityStuck(order.Items)
+	return err
+}

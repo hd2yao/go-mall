@@ -17,4 +17,6 @@ func registerOrderRoutes(rg *gin.RouterGroup) {
 	g.GET("user-order/", controller.UserOrders)
 	// 订单详情
 	g.GET(":order_no/info", controller.OrderInfo)
+	// 取消订单
+	g.PATCH(":order_no/cancel", controller.OrderCancel)
 }

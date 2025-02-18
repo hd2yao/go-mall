@@ -145,3 +145,10 @@ func (od *OrderDao) GetOrderItems(orderId int64) ([]*model.OrderItem, error) {
 
 	return orderItems, err
 }
+
+// UpdateOrderStatus 更新订单状态
+func (od *OrderDao) UpdateOrderStatus(orderId int64, status int) error {
+	return DBMaster().WithContext(od.ctx).Model(model.Order{}).
+		Where("id = ?", orderId).
+		Update("order_status", status).Error
+}

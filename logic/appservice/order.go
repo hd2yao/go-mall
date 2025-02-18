@@ -92,3 +92,8 @@ func (oas *OrderAppSvc) GetOrderInfo(orderNo string, userId int64) (*reply.Order
 
 	return replyOrder, nil
 }
+
+// CancelOrder 取消订单
+func (oas *OrderAppSvc) CancelOrder(orderNo string, userId int64) error {
+	return oas.orderDomainSvc.CancelUserOrder(orderNo, userId)
+}
