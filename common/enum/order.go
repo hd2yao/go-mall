@@ -2,9 +2,15 @@ package enum
 
 const (
 	PayStateNotInitiated = iota
-	PayStateUnpaid
+	PayStateUnPaid
 	PayStatePaid
 	PayStatePayFailed
+)
+
+const (
+	PayTypeNotConfirmed = iota // 未确认 -- 创建订单时的初始状态
+	PayTypeWxPay               // 微信支付
+	PayTypeAliPay              // 支付宝
 )
 
 const (

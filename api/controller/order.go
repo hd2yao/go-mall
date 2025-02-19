@@ -84,3 +84,25 @@ func OrderCancel(c *gin.Context) {
 
 	app.NewResponse(c).SuccessOk()
 }
+
+// CreateOrderPay 订单发起支付
+func CreateOrderPay(c *gin.Context) {
+	requestData := new(request.OrderPayCreate)
+	if err := c.ShouldBindJSON(requestData); err != nil {
+		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
+		return
+	}
+
+	orderAppSvc := appservice.NewOrderAppSvc(c)
+	reply, err := orderAppSvc.OrderCreatePay(requestData, c.GetInt64("user_id"))
+	if err != nil {
+		if errors.Is(err, errcode.ErrOrderParams) {
+			app.NewResponse(c).Error(errcode.ErrOrderParams)
+		} else {
+			app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		}
+		return
+	}
+
+	app.NewResponse(c).Success(reply)
+}
