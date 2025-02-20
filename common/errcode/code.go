@@ -40,8 +40,9 @@ var (
 
 // 订单模块相关错误码 10000500 ~ 10000599
 var (
-	ErrOrderParams          = newError(10000500, "订单参数异常")
-	ErrOrderCanNotBeChanged = newError(10000501, "订单不可修改")
+	ErrOrderParams              = newError(10000500, "订单参数异常")
+	ErrOrderCanNotBeChanged     = newError(10000501, "订单不可修改")
+	ErrOrderUnsupportedPayScene = newError(10000502, "支付场景暂不支持")
 )
 
 // HttpStatusCode 返回 HTTP 状态码

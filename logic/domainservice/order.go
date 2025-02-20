@@ -249,3 +249,32 @@ func (ods *OrderDomainSvc) CreateOrderWxPay(orderNo string, userId int64) (payIn
 	}
 	return
 }
+
+// StartOrderWxPay 把订单设置为开始支付的状态, 支付方式为微信支付
+func (ods *OrderDomainSvc) StartOrderWxPay(orderNo string, userId int64) error {
+	return ods.setOrderStartPay(orderNo, userId, enum.PayTypeWxPay)
+}
+
+// setOrderStartPay 把订单设置为开始支付的状态
+func (ods *OrderDomainSvc) setOrderStartPay(orderNo string, userId int64, payType int) error {
+	order, err := ods.GetSpecifiedUserOrder(orderNo, userId)
+	if err != nil {
+		return err
+	}
+	if order.OrderStatus != enum.OrderStatusCreated { // 订单不是初始状态，不能发起支付
+		return errcode.ErrOrderParams
+	}
+
+	order.PayType = payType
+	order.OrderStatus = enum.OrderStatusUnPaid // 订单状态--待支付
+	order.PayState = enum.PayStateUnPaid       // 支付状态--未支付
+	orderModel := new(model.Order)
+	if err = util.CopyProperties(orderModel, order); err != nil {
+		return errcode.ErrCoverData.WithCause(err)
+	}
+	if err = ods.orderDao.UpdateOrder(orderModel); err != nil {
+		return errcode.Wrap("CreteOrderWxPayError", err)
+	}
+
+	return nil
+}
