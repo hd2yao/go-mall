@@ -1,15 +1,21 @@
 package dao
 
 import (
+	"context"
 	"database/sql"
 	"os"
+	"regexp"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
+	"github.com/hd2yao/go-mall/common/util"
 	"github.com/hd2yao/go-mall/dal/dao"
+	"github.com/hd2yao/go-mall/logic/do"
 )
 
 var (
@@ -50,4 +56,33 @@ func TestMain(m *testing.M) {
 
 	// m.Run 是调用包下面各个 Test 函数的入口
 	os.Exit(m.Run())
+}
+
+func TestUserDao_CreateUser(t *testing.T) {
+	type fields struct {
+		ctx context.Context
+	}
+	userInfo := &do.UserBaseInfo{
+		NickName:  "Slang",
+		LoginName: "slang@go-mall.com",
+		Verified:  0,
+		Avatar:    "",
+		Slogan:    "happy!",
+		IsBlocked: 0,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	passwordHash, _ := util.BcryptPassword("123456")
+	userIsDel := 0
+
+	ud := dao.NewUserDao(context.TODO())
+	mock.ExpectBegin()
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `users`")).
+		WithArgs(userInfo.NickName, userInfo.LoginName, passwordHash, userInfo.Verified, userInfo.Avatar,
+			userInfo.Slogan, userIsDel, userInfo.IsBlocked, userInfo.CreatedAt, userInfo.UpdatedAt).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
+	userObj, err := ud.CreateUser(userInfo, passwordHash)
+	assert.Nil(t, err)
+	assert.Equal(t, userInfo.LoginName, userObj.LoginName)
 }
