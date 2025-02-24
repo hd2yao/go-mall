@@ -22,6 +22,10 @@ var (
 )
 
 func getHttpClient() *http.Client {
+	if _Client != nil {
+		// 因为 Unit test 里要把 Client 换掉，所以虽然用了 once.Do，但这里还是判断一下 _Client 有没有实例化
+		return _Client
+	}
 	once.Do(func() {
 		tr := &http.Transport{
 			// Proxy: http.ProxyFromEnvironment,
@@ -40,6 +44,11 @@ func getHttpClient() *http.Client {
 		_Client = &http.Client{Transport: tr}
 	})
 	return _Client
+}
+
+// SetUTHttpClient 让单元测试能把 http Clint 覆盖成具有 Mock 拦截设置的 HttpClient
+func SetUTHttpClient(client *http.Client) {
+	_Client = client
 }
 
 func Request(method string, url string, options ...Option) (httpStatusCode int, respBody []byte, err error) {
