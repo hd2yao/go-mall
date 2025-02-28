@@ -67,11 +67,11 @@ func (rd *ReviewDao) GetReviewById(reviewId uint) (*model.Review, []string, erro
 // GetUserReviews 获取用户的评价列表
 func (rd *ReviewDao) GetUserReviews(userId int64, pagination *app.Pagination) ([]*model.Review, error) {
 	var reviews []*model.Review
-	offset := (pagination.Page - 1) * pagination.Size
+	offset := (pagination.Page - 1) * pagination.PageSize
 
 	err := DB().Where("user_id = ? AND status = ?", userId, 1).
 		Offset(offset).
-		Limit(pagination.Size).
+		Limit(pagination.PageSize).
 		Order("created_at DESC").
 		Find(&reviews).Error
 
@@ -81,11 +81,11 @@ func (rd *ReviewDao) GetUserReviews(userId int64, pagination *app.Pagination) ([
 // GetCommodityReviews 获取商品的评价列表
 func (rd *ReviewDao) GetCommodityReviews(commodityId int64, pagination *app.Pagination) ([]*model.Review, error) {
 	var reviews []*model.Review
-	offset := (pagination.Page - 1) * pagination.Size
+	offset := (pagination.Page - 1) * pagination.PageSize
 
 	err := DB().Where("commodity_id = ? AND status = ?", commodityId, 1).
 		Offset(offset).
-		Limit(pagination.Size).
+		Limit(pagination.PageSize).
 		Order("created_at DESC").
 		Find(&reviews).Error
 

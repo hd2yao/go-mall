@@ -11,16 +11,15 @@ import (
 
 // CreateReview 创建商品评价
 func CreateReview(c *gin.Context) {
-	userId := app.GetUserId(c)
 	var req request.ReviewCreate
 	if err := c.ShouldBindJSON(&req); err != nil {
 		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
 		return
 	}
 
-	err := appservice.NewReviewAppSvc(c).CreateReview(&req, userId)
+	err := appservice.NewReviewAppSvc(c).CreateReview(&req, c.GetInt64("user_id"))
 	if err != nil {
-		app.NewResponse(c).Error(err)
+		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
 		return
 	}
 
@@ -39,7 +38,7 @@ func GetReviewById(c *gin.Context) {
 
 	review, err := appservice.NewReviewAppSvc(c).GetReviewById(req.ReviewId)
 	if err != nil {
-		app.NewResponse(c).Error(err)
+		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
 		return
 	}
 
@@ -48,12 +47,11 @@ func GetReviewById(c *gin.Context) {
 
 // GetUserReviews 获取用户的评价列表
 func GetUserReviews(c *gin.Context) {
-	userId := app.GetUserId(c)
-	pagination := app.GetPagination(c)
+	pagination := app.NewPagination(c)
 
-	reviews, err := appservice.NewReviewAppSvc(c).GetUserReviews(userId, pagination)
+	reviews, err := appservice.NewReviewAppSvc(c).GetUserReviews(c.GetInt64("user_id"), pagination)
 	if err != nil {
-		app.NewResponse(c).Error(err)
+		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
 		return
 	}
 
@@ -70,10 +68,10 @@ func GetCommodityReviews(c *gin.Context) {
 		return
 	}
 
-	pagination := app.GetPagination(c)
+	pagination := app.NewPagination(c)
 	reviews, err := appservice.NewReviewAppSvc(c).GetCommodityReviews(req.CommodityId, pagination)
 	if err != nil {
-		app.NewResponse(c).Error(err)
+		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
 		return
 	}
 
@@ -92,7 +90,7 @@ func GetReviewStatistics(c *gin.Context) {
 
 	stats, err := appservice.NewReviewAppSvc(c).GetReviewStatistics(req.CommodityId)
 	if err != nil {
-		app.NewResponse(c).Error(err)
+		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
 		return
 	}
 
@@ -109,7 +107,7 @@ func AdminReviewReply(c *gin.Context) {
 
 	err := appservice.NewReviewAppSvc(c).AdminReviewReply(&req)
 	if err != nil {
-		app.NewResponse(c).Error(err)
+		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
 		return
 	}
 
@@ -129,9 +127,9 @@ func UpdateReviewStatus(c *gin.Context) {
 
 	err := appservice.NewReviewAppSvc(c).UpdateReviewStatus(req.ReviewId, req.Status)
 	if err != nil {
-		app.NewResponse(c).Error(err)
+		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
 		return
 	}
 
 	app.NewResponse(c).Success(nil)
-} 
+}

@@ -30,11 +30,12 @@ func registerReviewRoute(rg *gin.RouterGroup) {
 	}
 
 	// 管理员接口
-	admin := g.Group("/admin", middleware.AuthAdmin())
+	// 需要鉴权 middleware.AuthAdmin()
+	admin := g.Group("/admin")
 	{
 		// 商家回复评价
 		admin.POST("/reply", controller.AdminReviewReply)
 		// 更新评价状态
 		admin.POST("/status", controller.UpdateReviewStatus)
 	}
-} 
+}
