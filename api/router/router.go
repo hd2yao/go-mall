@@ -7,8 +7,9 @@ import (
 )
 
 func RegisterRoutes(engine *gin.Engine) {
-	// Use global middlewares
+	// 注册全局中间件
 	engine.Use(middleware.StartTrace(), middleware.LogAccess(), middleware.GinPanicRecovery())
+
 	routeGroup := engine.Group("")
 	registerBuildingRoute(routeGroup)
 	registerUserRoutes(routeGroup)
