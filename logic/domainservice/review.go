@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/samber/lo"
+
 	"github.com/hd2yao/go-mall/common/app"
 	"github.com/hd2yao/go-mall/common/errcode"
 	"github.com/hd2yao/go-mall/common/util"
@@ -25,51 +27,71 @@ func NewReviewDomainSvc(ctx context.Context) *ReviewDomainSvc {
 }
 
 // CreateReview 创建商品评价
-func (rds *ReviewDomainSvc) CreateReview(review *do.Review) error {
+func (rds *ReviewDomainSvc) CreateReview(review *do.Review) (err error) {
 	// 验证评分范围
 	if review.Rating < 1 || review.Rating > 5 {
 		return errcode.ErrParams
 	}
 
-	reviewModel := new(model.Review)
-	err := util.CopyProperties(reviewModel, review)
-	if err != nil {
-		return errcode.ErrCoverData
-	}
+	tx := dao.DBMaster().Begin()
+	panicked := true
+	defer func() {
+		if err != nil || panicked {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
 
-	reviewModel.HasImage = len(review.Images) > 0
-	err = rds.reviewDao.CreateReview(reviewModel, review.Images)
+	review.HasImage = len(review.Images) > 0
+	err = rds.reviewDao.CreateReview(tx, review, review.Images)
 	if err != nil {
 		return errcode.Wrap("CreateReviewError", err)
 	}
 
+	panicked = false
 	return nil
 }
 
 // GetReviewById 获取评价详情
-func (rds *ReviewDomainSvc) GetReviewById(reviewId uint) (*do.Review, error) {
-	reviewModel, images, err := rds.reviewDao.GetReviewById(reviewId)
+func (rds *ReviewDomainSvc) GetReviewById(reviewId int64, userId int64) (*do.Review, error) {
+	reviewModel, err := rds.reviewDao.GetReviewById(reviewId)
 	if err != nil {
-		return nil, errcode.Wrap("GetReviewError", err)
+		return nil, errcode.Wrap("GetReviewByIdError", err)
+	}
+	if reviewModel == nil || reviewModel.UserId != userId {
+		return nil, errcode.ErrReviewParams
 	}
 
 	review := new(do.Review)
 	err = util.CopyProperties(review, reviewModel)
 	if err != nil {
-		return nil, errcode.ErrCoverData
+		return nil, errcode.ErrCoverData.WithCause(err)
 	}
-	review.Images = images
+
+	// 获取评价图片
+	reviewImages, err := rds.reviewDao.GetReviewImages(reviewId)
+	if err != nil {
+		return nil, errcode.Wrap("GetReviewByIdError", err)
+	}
+	reviewImageUrls := lo.Map(reviewImages, func(reviewImage *model.ReviewImage, index int) string {
+		return reviewImage.ImageUrl
+	})
+	review.Images = reviewImageUrls
 
 	return review, nil
 }
 
 // GetUserReviews 获取用户的评价列表
 func (rds *ReviewDomainSvc) GetUserReviews(userId int64, pagination *app.Pagination) ([]*do.Review, error) {
-	reviewModels, err := rds.reviewDao.GetUserReviews(userId, pagination)
+	offset := pagination.Offset()
+	size := pagination.GetPageSize()
+
+	reviewModels, totalRow, err := rds.reviewDao.GetUserReviews(userId, offset, size)
 	if err != nil {
 		return nil, errcode.Wrap("GetUserReviewsError", err)
 	}
-
+	pagination.SetTotalRows(int(totalRow))
 	reviews := make([]*do.Review, 0, len(reviewModels))
 	err = util.CopyProperties(&reviews, reviewModels)
 	if err != nil {
@@ -103,13 +125,13 @@ func (rds *ReviewDomainSvc) GetReviewStatistics(commodityId int64) (*do.ReviewSt
 	}
 
 	return &do.ReviewStatistics{
-		CommodityId:    commodityId,
-		TotalCount:     stats.TotalCount,
-		PositiveCount:  stats.PositiveCount,
-		NeutralCount:   stats.NeutralCount,
-		NegativeCount:  stats.NegativeCount,
-		HasImageCount:  stats.HasImageCount,
-		AverageRating:  stats.AvgRating,
+		CommodityId:   commodityId,
+		TotalCount:    stats.TotalCount,
+		PositiveCount: stats.PositiveCount,
+		NeutralCount:  stats.NeutralCount,
+		NegativeCount: stats.NegativeCount,
+		HasImageCount: stats.HasImageCount,
+		AverageRating: stats.AvgRating,
 	}, nil
 }
 
@@ -130,4 +152,4 @@ func (rds *ReviewDomainSvc) UpdateReviewStatus(reviewId uint, status int) error 
 		return errcode.Wrap("UpdateReviewStatusError", err)
 	}
 	return nil
-} 
+}

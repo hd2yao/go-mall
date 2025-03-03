@@ -45,6 +45,11 @@ var (
 	ErrOrderUnsupportedPayScene = newError(10000502, "支付场景暂不支持")
 )
 
+// 评价模块相关错误码 10000600 ~ 10000699
+var (
+	ErrReviewParams = newError(10000600, "评价参数异常")
+)
+
 // HttpStatusCode 返回 HTTP 状态码
 func (e *AppError) HttpStatusCode() int {
 	switch e.Code() {
@@ -53,7 +58,8 @@ func (e *AppError) HttpStatusCode() int {
 	case ErrServer.Code(), ErrPanic.Code():
 		return http.StatusInternalServerError
 	case ErrParams.Code(), ErrUserInvalid.Code(), ErrUserNameOccupied.Code(), ErrUserNotRight.Code(),
-		ErrCommodityNotExists.Code(), ErrCommodityStockOut.Code(), ErrCartItemParam.Code(), ErrOrderParams.Code():
+		ErrCommodityNotExists.Code(), ErrCommodityStockOut.Code(), ErrCartItemParam.Code(), ErrOrderParams.Code(),
+		ErrReviewParams.code:
 		return http.StatusBadRequest
 	case ErrNotFound.Code():
 		return http.StatusNotFound
