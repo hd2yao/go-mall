@@ -10,7 +10,7 @@ import (
 type Review struct {
 	ID             int64                 `gorm:"column:id;primary_key;AUTO_INCREMENT"`
 	UserId         int64                 `gorm:"column:user_id;not null;index:idx_user_id"`            // 用户 ID
-	OrderId        int64                 `gorm:"column:order_id;not null;index:idx_order_id"`          // 订单 ID
+	OrderNo        string                `gorm:"column:order_no;not null;index:idx_order_no"`          // 订单编号
 	OrderItemId    int64                 `gorm:"column:order_item_id;not null"`                        // 订单商品 ID
 	CommodityId    int64                 `gorm:"column:commodity_id;not null;index:idx_commodity_id"`  // 商品 ID
 	Rating         int                   `gorm:"column:rating;not null"`                               // 评分(1-5)

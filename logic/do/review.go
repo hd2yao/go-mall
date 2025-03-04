@@ -6,7 +6,7 @@ import "time"
 type Review struct {
 	ID             int64
 	UserId         int64
-	OrderId        int64
+	OrderNo        string
 	OrderItemId    int64
 	CommodityId    int64
 	Rating         int
