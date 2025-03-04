@@ -117,15 +117,33 @@ func (rds *ReviewDomainSvc) GetUserReviews(userId int64, pagination *app.Paginat
 
 // GetCommodityReviews 获取商品的评价列表
 func (rds *ReviewDomainSvc) GetCommodityReviews(commodityId int64, pagination *app.Pagination) ([]*do.Review, error) {
-	reviewModels, err := rds.reviewDao.GetCommodityReviews(commodityId, pagination)
+	offset := pagination.Offset()
+	size := pagination.GetPageSize()
+
+	// 获取商品评价列表
+	reviewModels, totalRow, err := rds.reviewDao.GetCommodityReviews(commodityId, offset, size)
+	if err != nil {
+		return nil, errcode.Wrap("GetCommodityReviewsError", err)
+	}
+	pagination.SetTotalRows(int(totalRow))
+	reviews := make([]*do.Review, 0, len(reviewModels))
+	if err = util.CopyProperties(&reviews, reviewModels); err != nil {
+		return nil, errcode.ErrCoverData.WithCause(err)
+	}
+
+	// 提取所有评价 ID
+	reviewIds := lo.Map(reviewModels, func(reviewModel *model.Review, index int) int64 {
+		return reviewModel.ID
+	})
+	// 获取评价图片
+	reviewImages, err := rds.reviewDao.GetMultiReviewsImages(reviewIds)
 	if err != nil {
 		return nil, errcode.Wrap("GetCommodityReviewsError", err)
 	}
 
-	reviews := make([]*do.Review, 0, len(reviewModels))
-	err = util.CopyProperties(&reviews, reviewModels)
-	if err != nil {
-		return nil, errcode.ErrCoverData
+	// 填充 Review 中的 Images
+	for _, review := range reviews {
+		review.Images = reviewImages[review.ID]
 	}
 
 	return reviews, nil

@@ -6,7 +6,6 @@ import (
 	"github.com/samber/lo"
 	"gorm.io/gorm"
 
-	"github.com/hd2yao/go-mall/common/app"
 	"github.com/hd2yao/go-mall/common/errcode"
 	"github.com/hd2yao/go-mall/common/util"
 	"github.com/hd2yao/go-mall/dal/model"
@@ -119,17 +118,18 @@ func (rd *ReviewDao) GetMultiReviewsImages(reviewIds []int64) (map[int64][]strin
 }
 
 // GetCommodityReviews 获取商品的评价列表
-func (rd *ReviewDao) GetCommodityReviews(commodityId int64, pagination *app.Pagination) ([]*model.Review, error) {
-	var reviews []*model.Review
-	offset := (pagination.Page - 1) * pagination.PageSize
-
-	err := DB().Where("commodity_id = ? AND status = ?", commodityId, 1).
-		Offset(offset).
-		Limit(pagination.PageSize).
+func (rd *ReviewDao) GetCommodityReviews(commodityId int64, offset, returnSize int) (reviews []*model.Review, totalRows int64, err error) {
+	err = DB().WithContext(rd.ctx).Where("commodity_id = ? AND status = ?", commodityId, 1).
+		Offset(offset).Limit(returnSize).
 		Order("created_at DESC").
 		Find(&reviews).Error
+	if err != nil {
+		return nil, 0, err
+	}
 
-	return reviews, err
+	// 查询满足条件的记录数
+	DB().WithContext(rd.ctx).Model(model.Review{}).Where("commodity_id = ?", commodityId).Count(&totalRows)
+	return
 }
 
 // GetReviewStatistics 获取商品评价统计
