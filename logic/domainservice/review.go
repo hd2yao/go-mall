@@ -156,15 +156,12 @@ func (rds *ReviewDomainSvc) GetReviewStatistics(commodityId int64) (*do.ReviewSt
 		return nil, errcode.Wrap("GetReviewStatisticsError", err)
 	}
 
-	return &do.ReviewStatistics{
-		CommodityId:   commodityId,
-		TotalCount:    stats.TotalCount,
-		PositiveCount: stats.PositiveCount,
-		NeutralCount:  stats.NeutralCount,
-		NegativeCount: stats.NegativeCount,
-		HasImageCount: stats.HasImageCount,
-		AverageRating: stats.AvgRating,
-	}, nil
+	reviewStat := new(do.ReviewStatistics)
+	if err = util.CopyProperties(reviewStat, stats); err != nil {
+		return nil, errcode.ErrCoverData.WithCause(err)
+	}
+	reviewStat.CommodityId = commodityId
+	return reviewStat, nil
 }
 
 // AdminReviewReply 商家回复评价
