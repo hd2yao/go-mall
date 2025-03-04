@@ -7,6 +7,7 @@ import (
 	"github.com/samber/lo"
 
 	"github.com/hd2yao/go-mall/common/app"
+	"github.com/hd2yao/go-mall/common/enum"
 	"github.com/hd2yao/go-mall/common/errcode"
 	"github.com/hd2yao/go-mall/common/util"
 	"github.com/hd2yao/go-mall/dal/dao"
@@ -165,7 +166,7 @@ func (rds *ReviewDomainSvc) GetReviewStatistics(commodityId int64) (*do.ReviewSt
 }
 
 // AdminReviewReply 商家回复评价
-func (rds *ReviewDomainSvc) AdminReviewReply(reviewId uint, reply string) error {
+func (rds *ReviewDomainSvc) AdminReviewReply(reviewId int64, reply string) error {
 	replyTime := time.Now().Unix()
 	err := rds.reviewDao.AdminReply(reviewId, reply, replyTime)
 	if err != nil {
@@ -175,10 +176,40 @@ func (rds *ReviewDomainSvc) AdminReviewReply(reviewId uint, reply string) error 
 }
 
 // UpdateReviewStatus 更新评价状态
-func (rds *ReviewDomainSvc) UpdateReviewStatus(reviewId uint, status int) error {
+func (rds *ReviewDomainSvc) UpdateReviewStatus(reviewId int64, status int) error {
 	err := rds.reviewDao.UpdateReviewStatus(reviewId, status)
 	if err != nil {
 		return errcode.Wrap("UpdateReviewStatusError", err)
 	}
+	return nil
+}
+
+// DeleteReview 删除已发布的评论
+func (rds *ReviewDomainSvc) DeleteReview(reviewId int64) error {
+	// 查询评论信息
+	review, err := rds.reviewDao.GetReviewById(reviewId)
+	if err != nil {
+		return errcode.Wrap("DeleteReviewError", err)
+	}
+	if review.Status != enum.ReviewStatusPublished {
+		return errcode.ErrReviewStatusCanNotChanged
+	}
+
+	tx := dao.DBMaster().Begin()
+	panicked := true
+	defer func() {
+		if err != nil || panicked {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	// 删除评论
+	err = rds.reviewDao.DeletePublishedReview(tx, reviewId)
+	if err != nil {
+		return errcode.Wrap("DeleteReviewError", err)
+	}
+
 	return nil
 }

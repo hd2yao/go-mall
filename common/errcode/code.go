@@ -47,7 +47,8 @@ var (
 
 // 评价模块相关错误码 10000600 ~ 10000699
 var (
-	ErrReviewParams = newError(10000600, "评价参数异常")
+	ErrReviewParams              = newError(10000600, "评价参数异常")
+	ErrReviewStatusCanNotChanged = newError(10000601, "评价状态不可修改")
 )
 
 // HttpStatusCode 返回 HTTP 状态码
@@ -67,7 +68,7 @@ func (e *AppError) HttpStatusCode() int {
 		return http.StatusTooManyRequests
 	case ErrToken.Code():
 		return http.StatusUnauthorized
-	case ErrForbidden.Code(), ErrCartWrongUser.Code(), ErrOrderCanNotBeChanged.Code():
+	case ErrForbidden.Code(), ErrCartWrongUser.Code(), ErrOrderCanNotBeChanged.Code(), ErrReviewStatusCanNotChanged.Code():
 		return http.StatusForbidden
 	default:
 		return http.StatusInternalServerError

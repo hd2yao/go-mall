@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
+	"github.com/hd2yao/go-mall/common/enum"
 	"github.com/hd2yao/go-mall/common/errcode"
 	"github.com/hd2yao/go-mall/common/util"
 	"github.com/hd2yao/go-mall/dal/model"
@@ -187,18 +188,33 @@ func (rd *ReviewDao) GetReviewStatistics(commodityId int64) (*struct {
 }
 
 // UpdateReviewStatus 更新评价状态
-func (rd *ReviewDao) UpdateReviewStatus(reviewId uint, status int) error {
-	return DB().Model(&model.Review{}).
+func (rd *ReviewDao) UpdateReviewStatus(reviewId int64, status int) error {
+	return DB().WithContext(rd.ctx).Model(&model.Review{}).
 		Where("id = ?", reviewId).
 		Update("status", status).Error
 }
 
 // AdminReply 商家回复评价
-func (rd *ReviewDao) AdminReply(reviewId uint, reply string, replyTime int64) error {
-	return DB().Model(&model.Review{}).
+func (rd *ReviewDao) AdminReply(reviewId int64, reply string, replyTime int64) error {
+	return DB().WithContext(rd.ctx).Model(&model.Review{}).
 		Where("id = ?", reviewId).
 		Updates(map[string]interface{}{
 			"admin_reply":      reply,
 			"admin_reply_time": replyTime,
 		}).Error
+}
+
+// DeletePublishedReview 删除已发布的评论
+func (rd *ReviewDao) DeletePublishedReview(tx *gorm.DB, reviewId int64) error {
+	err := tx.WithContext(rd.ctx).Model(&model.Review{}).
+		Where("id = ? AND status = ?", reviewId, 1).
+		Update("status", enum.ReviewStatusDeleted).Error
+	if err != nil {
+		return err
+	}
+
+	// 删除对应的评论图片
+	return tx.WithContext(rd.ctx).Model(&model.ReviewImage{}).
+		Where("review_id = ?", reviewId).
+		Update("is_del", 1).Error
 }
