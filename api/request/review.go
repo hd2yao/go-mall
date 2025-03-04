@@ -16,3 +16,9 @@ type ReviewReply struct {
 	ReviewId int64  `json:"review_id" binding:"required"` // 评价ID
 	Reply    string `json:"reply" binding:"required"`     // 回复内容
 }
+
+// ReviewApprove 审核评价请求
+type ReviewApprove struct {
+	ReviewId int64 `json:"review_id" binding:"required"`        // 评价ID
+	Status   int   `json:"status" binding:"required,oneof=1,2"` // 审核状态: 1-通过 2-拒绝
+}

@@ -32,10 +32,10 @@ func (ras *ReviewAppSvc) CreateReview(request *request.ReviewCreate, userId int6
 		return err
 	}
 	if orderModel == nil || orderModel.UserId != userId { // 订单不存在或不是当前用户
-		return errcode.ErrOrderParams
+		return errcode.ErrReviewParams
 	}
 	if orderModel.OrderStatus != enum.OrderStatusConfirmReceipt && orderModel.OrderStatus != enum.OrderStatusCompleted { // 订单状态不是确认收货或已完成
-		return errcode.ErrOrderCanNotBeChanged
+		return errcode.ErrReviewUnsupportedScene
 	}
 
 	review := new(do.Review)

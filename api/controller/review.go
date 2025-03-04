@@ -1,6 +1,9 @@
 package controller
 
 import (
+	"errors"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/hd2yao/go-mall/api/request"
@@ -11,125 +14,128 @@ import (
 
 // CreateReview 创建商品评价
 func CreateReview(c *gin.Context) {
-	var req request.ReviewCreate
-	if err := c.ShouldBindJSON(&req); err != nil {
+	requestData := new(request.ReviewCreate)
+	if err := c.ShouldBindJSON(&requestData); err != nil {
 		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
 		return
 	}
 
-	err := appservice.NewReviewAppSvc(c).CreateReview(&req, c.GetInt64("user_id"))
+	err := appservice.NewReviewAppSvc(c).CreateReview(requestData, c.GetInt64("user_id"))
 	if err != nil {
-		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
+		if errors.Is(err, errcode.ErrReviewParams) {
+			app.NewResponse(c).Error(errcode.ErrReviewParams)
+		} else if errors.Is(err, errcode.ErrReviewUnsupportedScene) {
+			app.NewResponse(c).Error(errcode.ErrReviewUnsupportedScene)
+		} else {
+			app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		}
 		return
 	}
 
-	app.NewResponse(c).Success(nil)
+	app.NewResponse(c).SuccessOk()
 }
 
 // GetReviewById 获取评价详情
 func GetReviewById(c *gin.Context) {
-	var req struct {
-		ReviewId uint `form:"review_id" binding:"required"`
-	}
-	if err := c.ShouldBindQuery(&req); err != nil {
-		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
-		return
-	}
+	reviewIdStr := c.Param("review_id")
+	reviewId, _ := strconv.ParseInt(reviewIdStr, 10, 64)
 
-	review, err := appservice.NewReviewAppSvc(c).GetReviewById(req.ReviewId)
+	replyReview, err := appservice.NewReviewAppSvc(c).GetReviewById(reviewId, c.GetInt64("user_id"))
 	if err != nil {
-		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
+		if errors.Is(err, errcode.ErrReviewParams) {
+			app.NewResponse(c).Error(errcode.ErrReviewParams)
+		} else {
+			app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		}
 		return
 	}
 
-	app.NewResponse(c).Success(review)
+	app.NewResponse(c).Success(replyReview)
 }
 
 // GetUserReviews 获取用户的评价列表
 func GetUserReviews(c *gin.Context) {
 	pagination := app.NewPagination(c)
-
-	reviews, err := appservice.NewReviewAppSvc(c).GetUserReviews(c.GetInt64("user_id"), pagination)
+	replyReviews, err := appservice.NewReviewAppSvc(c).GetUserReviews(c.GetInt64("user_id"), pagination)
 	if err != nil {
 		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
 		return
 	}
 
-	app.NewResponse(c).Success(reviews)
+	app.NewResponse(c).Success(replyReviews)
 }
 
 // GetCommodityReviews 获取商品的评价列表
 func GetCommodityReviews(c *gin.Context) {
-	var req struct {
-		CommodityId int64 `form:"commodity_id" binding:"required"`
-	}
-	if err := c.ShouldBindQuery(&req); err != nil {
-		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
-		return
-	}
-
+	commodityIdStr := c.Param("commodity_id")
+	commodityId, _ := strconv.ParseInt(commodityIdStr, 10, 64)
 	pagination := app.NewPagination(c)
-	reviews, err := appservice.NewReviewAppSvc(c).GetCommodityReviews(req.CommodityId, pagination)
+
+	replyReviews, err := appservice.NewReviewAppSvc(c).GetCommodityReviews(commodityId, pagination)
 	if err != nil {
-		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
+		if errors.Is(err, errcode.ErrReviewParams) {
+			app.NewResponse(c).Error(errcode.ErrReviewParams)
+		} else {
+			app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		}
 		return
 	}
 
-	app.NewResponse(c).Success(reviews)
+	app.NewResponse(c).Success(replyReviews)
 }
 
 // GetReviewStatistics 获取商品评价统计
 func GetReviewStatistics(c *gin.Context) {
-	var req struct {
-		CommodityId int64 `form:"commodity_id" binding:"required"`
-	}
-	if err := c.ShouldBindQuery(&req); err != nil {
-		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
-		return
-	}
+	commodityIdStr := c.Param("commodity_id")
+	commodityId, _ := strconv.ParseInt(commodityIdStr, 10, 64)
 
-	stats, err := appservice.NewReviewAppSvc(c).GetReviewStatistics(req.CommodityId)
+	commodityReviewStatistics, err := appservice.NewReviewAppSvc(c).GetReviewStatistics(commodityId)
 	if err != nil {
-		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
+		if errors.Is(err, errcode.ErrReviewParams) {
+			app.NewResponse(c).Error(errcode.ErrReviewParams)
+		} else {
+			app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		}
 		return
 	}
 
-	app.NewResponse(c).Success(stats)
+	app.NewResponse(c).Success(commodityReviewStatistics)
 }
 
 // AdminReviewReply 商家回复评价
 func AdminReviewReply(c *gin.Context) {
-	var req request.ReviewReply
-	if err := c.ShouldBindJSON(&req); err != nil {
+	requestData := new(request.ReviewReply)
+	if err := c.ShouldBindJSON(&requestData); err != nil {
 		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
 		return
 	}
 
-	err := appservice.NewReviewAppSvc(c).AdminReviewReply(&req)
+	err := appservice.NewReviewAppSvc(c).AdminReviewReply(requestData)
 	if err != nil {
 		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
 		return
 	}
 
-	app.NewResponse(c).Success(nil)
+	app.NewResponse(c).SuccessOk()
 }
 
-// UpdateReviewStatus 更新评价状态
+// UpdateReviewStatus 审核更新评价状态
 func UpdateReviewStatus(c *gin.Context) {
-	var req struct {
-		ReviewId uint `json:"review_id" binding:"required"`
-		Status   int  `json:"status" binding:"required,oneof=0 1 2"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
+	requestData := new(request.ReviewApprove)
+	if err := c.ShouldBindJSON(&requestData); err != nil {
 		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
 		return
 	}
 
-	err := appservice.NewReviewAppSvc(c).UpdateReviewStatus(req.ReviewId, req.Status)
+	err := appservice.NewReviewAppSvc(c).UpdateReviewStatus(requestData.ReviewId, requestData.Status)
 	if err != nil {
-		app.NewResponse(c).Error(errcode.ErrParams.WithCause(err))
+		if errors.Is(err, errcode.ErrReviewStatusCanNotChanged) {
+			app.NewResponse(c).Error(errcode.ErrReviewStatusCanNotChanged)
+		} else {
+			app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		}
 		return
 	}
 
-	app.NewResponse(c).Success(nil)
+	app.NewResponse(c).SuccessOk()
 }

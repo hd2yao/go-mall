@@ -177,7 +177,17 @@ func (rds *ReviewDomainSvc) AdminReviewReply(reviewId int64, reply string) error
 
 // UpdateReviewStatus 更新评价状态
 func (rds *ReviewDomainSvc) UpdateReviewStatus(reviewId int64, status int) error {
-	err := rds.reviewDao.UpdateReviewStatus(reviewId, status)
+	// 查询评论信息
+	review, err := rds.reviewDao.GetReviewById(reviewId)
+	if err != nil {
+		return errcode.Wrap("DeleteReviewError", err)
+	}
+	// 评论状态只有待审核才可以更新状态
+	if review.Status > enum.ReviewStatusDraft {
+		return errcode.ErrReviewStatusCanNotChanged
+	}
+
+	err = rds.reviewDao.UpdateReviewStatus(reviewId, status)
 	if err != nil {
 		return errcode.Wrap("UpdateReviewStatusError", err)
 	}

@@ -49,6 +49,7 @@ var (
 var (
 	ErrReviewParams              = newError(10000600, "评价参数异常")
 	ErrReviewStatusCanNotChanged = newError(10000601, "评价状态不可修改")
+	ErrReviewUnsupportedScene    = newError(10000602, "评价场景暂不支持")
 )
 
 // HttpStatusCode 返回 HTTP 状态码
@@ -60,7 +61,7 @@ func (e *AppError) HttpStatusCode() int {
 		return http.StatusInternalServerError
 	case ErrParams.Code(), ErrUserInvalid.Code(), ErrUserNameOccupied.Code(), ErrUserNotRight.Code(),
 		ErrCommodityNotExists.Code(), ErrCommodityStockOut.Code(), ErrCartItemParam.Code(), ErrOrderParams.Code(),
-		ErrReviewParams.code:
+		ErrReviewParams.Code(), ErrReviewUnsupportedScene.Code():
 		return http.StatusBadRequest
 	case ErrNotFound.Code():
 		return http.StatusNotFound
