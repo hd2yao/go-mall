@@ -93,9 +93,23 @@ func (rds *ReviewDomainSvc) GetUserReviews(userId int64, pagination *app.Paginat
 	}
 	pagination.SetTotalRows(int(totalRow))
 	reviews := make([]*do.Review, 0, len(reviewModels))
-	err = util.CopyProperties(&reviews, reviewModels)
+	if err = util.CopyProperties(&reviews, reviewModels); err != nil {
+		return nil, errcode.ErrCoverData.WithCause(err)
+	}
+
+	// 提取所有评价 ID
+	reviewIds := lo.Map(reviewModels, func(reviewModel *model.Review, index int) int64 {
+		return reviewModel.ID
+	})
+	// 获取评价图片
+	reviewImages, err := rds.reviewDao.GetMultiReviewsImages(reviewIds)
 	if err != nil {
-		return nil, errcode.ErrCoverData
+		return nil, errcode.Wrap("GetUserReviewsError", err)
+	}
+
+	// 填充 Review 中的 Images
+	for _, review := range reviews {
+		review.Images = reviewImages[review.ID]
 	}
 
 	return reviews, nil
