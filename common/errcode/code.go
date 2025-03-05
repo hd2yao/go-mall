@@ -45,6 +45,13 @@ var (
 	ErrOrderUnsupportedPayScene = newError(10000502, "支付场景暂不支持")
 )
 
+// 评价模块相关错误码 10000600 ~ 10000699
+var (
+	ErrReviewParams              = newError(10000600, "评价参数异常")
+	ErrReviewStatusCanNotChanged = newError(10000601, "评价状态不可修改")
+	ErrReviewUnsupportedScene    = newError(10000602, "评价场景暂不支持")
+)
+
 // HttpStatusCode 返回 HTTP 状态码
 func (e *AppError) HttpStatusCode() int {
 	switch e.Code() {
@@ -53,7 +60,8 @@ func (e *AppError) HttpStatusCode() int {
 	case ErrServer.Code(), ErrPanic.Code():
 		return http.StatusInternalServerError
 	case ErrParams.Code(), ErrUserInvalid.Code(), ErrUserNameOccupied.Code(), ErrUserNotRight.Code(),
-		ErrCommodityNotExists.Code(), ErrCommodityStockOut.Code(), ErrCartItemParam.Code(), ErrOrderParams.Code():
+		ErrCommodityNotExists.Code(), ErrCommodityStockOut.Code(), ErrCartItemParam.Code(), ErrOrderParams.Code(),
+		ErrReviewParams.Code(), ErrReviewUnsupportedScene.Code():
 		return http.StatusBadRequest
 	case ErrNotFound.Code():
 		return http.StatusNotFound
@@ -61,7 +69,7 @@ func (e *AppError) HttpStatusCode() int {
 		return http.StatusTooManyRequests
 	case ErrToken.Code():
 		return http.StatusUnauthorized
-	case ErrForbidden.Code(), ErrCartWrongUser.Code(), ErrOrderCanNotBeChanged.Code():
+	case ErrForbidden.Code(), ErrCartWrongUser.Code(), ErrOrderCanNotBeChanged.Code(), ErrReviewStatusCanNotChanged.Code():
 		return http.StatusForbidden
 	default:
 		return http.StatusInternalServerError
