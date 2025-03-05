@@ -5,7 +5,6 @@ import (
 
 	"github.com/samber/lo"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 
 	"github.com/hd2yao/go-mall/common/enum"
 	"github.com/hd2yao/go-mall/common/errcode"
@@ -153,36 +152,37 @@ func (rd *ReviewDao) GetReviewStatistics(commodityId int64) (*struct {
 	}
 
 	// 使用原生 SQL
-	//err := DB().Model(&model.Review{}).
-	//    Where("commodity_id = ? AND status = ?", commodityId, 1).
-	//    Select("COUNT(*) as total_count, " +
-	//        "SUM(CASE WHEN rating >= 4 THEN 1 ELSE 0 END) as positive_count, " +
-	//        "SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) as neutral_count, " +
-	//        "SUM(CASE WHEN rating <= 2 THEN 1 ELSE 0 END) as negative_count, " +
-	//        "SUM(CASE WHEN has_image = 1 THEN 1 ELSE 0 END) as has_image_count, " +
-	//        "AVG(rating) as avg_rating").
-	//    Scan(&stats).Error
+	err := DB().Model(&model.Review{}).
+		Where("commodity_id = ? AND status = ?", commodityId, 1).
+		Select("COUNT(*) as total_count, " +
+			"SUM(CASE WHEN rating >= 4 THEN 1 ELSE 0 END) as positive_count, " +
+			"SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) as neutral_count, " +
+			"SUM(CASE WHEN rating <= 2 THEN 1 ELSE 0 END) as negative_count, " +
+			"SUM(CASE WHEN has_image = 1 THEN 1 ELSE 0 END) as has_image_count, " +
+			"AVG(rating) as avg_rating").
+		Scan(&stats).Error
 
 	// 使用 GORM 的 Clauses 实现
-	err := DB().WithContext(rd.ctx).Model(&model.Review{}).
-		Where("commodity_id = ? AND status = ?", commodityId, 1).
-		Select("COUNT(*) as total_count").
-		Clauses(clause.Select{
-			Expression: gorm.Expr("SUM(IF(rating >= ?, 1, 0)) as positive_count", 4),
-		}).
-		Clauses(clause.Select{
-			Expression: gorm.Expr("SUM(IF(rating = ?, 1, 0)) as neutral_count", 3),
-		}).
-		Clauses(clause.Select{
-			Expression: gorm.Expr("SUM(IF(rating <= ?, 1, 0)) as negative_count", 2),
-		}).
-		Clauses(clause.Select{
-			Expression: gorm.Expr("SUM(IF(has_image = ?, 1, 0)) as has_image_count", 1),
-		}).
-		Clauses(clause.Select{
-			Expression: gorm.Expr("AVG(rating) as avg_rating"),
-		}).
-		Scan(&stats).Error
+	// 以下是不对的，因为 Clauses 是覆盖模式，会覆盖之前的 Select 语句，所以下面语句只会执行 AVG 语句
+	//err := DB().WithContext(rd.ctx).Model(&model.Review{}).
+	// 	Where("commodity_id = ? AND status = ?", commodityId, 1).
+	// 	Select("COUNT(*) as total_count").
+	// 	Clauses(clause.Select{
+	// 		Expression: gorm.Expr("SUM(IF(rating >= ?, 1, 0)) as positive_count", 4),
+	// 	}).
+	// 	Clauses(clause.Select{
+	// 		Expression: gorm.Expr("SUM(IF(rating = ?, 1, 0)) as neutral_count", 3),
+	// 	}).
+	// 	Clauses(clause.Select{
+	// 		Expression: gorm.Expr("SUM(IF(rating <= ?, 1, 0)) as negative_count", 2),
+	// 	}).
+	// 	Clauses(clause.Select{
+	// 		Expression: gorm.Expr("SUM(IF(has_image = ?, 1, 0)) as has_image_count", 1),
+	// 	}).
+	// 	Clauses(clause.Select{
+	// 		Expression: gorm.Expr("AVG(rating) as avg_rating"),
+	// 	}).
+	// 	Scan(&stats).Error
 
 	return &stats, err
 }

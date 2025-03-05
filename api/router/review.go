@@ -22,11 +22,11 @@ func registerReviewRoute(rg *gin.RouterGroup) {
 	// 不需要登录的接口
 	{
 		// 获取评价详情
-		g.GET(":review_id/detail", controller.GetReviewById)
+		g.GET("/detail/:review_id", controller.GetReviewById)
 		// 获取商品的评价列表
-		g.GET(":commodity_id/list", controller.GetCommodityReviews)
+		g.GET("/commodity/:commodity_id/list", controller.GetCommodityReviews)
 		// 获取商品评价统计
-		g.GET(":commodity_id/statistics", controller.GetReviewStatistics)
+		g.GET("/commodity/:commodity_id/statistics", controller.GetReviewStatistics)
 	}
 
 	// 以下涉及到管理员系统
