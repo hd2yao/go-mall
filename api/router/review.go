@@ -22,14 +22,14 @@ func registerReviewRoute(rg *gin.RouterGroup) {
 	// 不需要登录的接口
 	{
 		// 获取评价详情
-		g.GET("/detail", controller.GetReviewById)
+		g.GET(":review_id/detail", controller.GetReviewById)
 		// 获取商品的评价列表
-		g.GET("/commodity/list", controller.GetCommodityReviews)
+		g.GET(":commodity_id/list", controller.GetCommodityReviews)
 		// 获取商品评价统计
-		g.GET("/statistics", controller.GetReviewStatistics)
+		g.GET(":commodity_id/statistics", controller.GetReviewStatistics)
 	}
 
-	// 管理员接口
+	// 以下涉及到管理员系统
 	// 需要鉴权 middleware.AuthAdmin()
 	admin := g.Group("/admin")
 	{
