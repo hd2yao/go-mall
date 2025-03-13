@@ -40,6 +40,10 @@ func (cds *CartDomainSvc) GetUserCartItems(userId int64) ([]*do.ShoppingCartItem
 		return nil, errcode.ErrCoverData.WithCause(err)
 	}
 
+	if len(userCartItems) == 0 {
+		return userCartItems, nil
+	}
+
 	err = cds.fillInCommodityInfo(userCartItems)
 	if err != nil {
 		return nil, err

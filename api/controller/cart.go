@@ -18,7 +18,11 @@ func UserCartItems(c *gin.Context) {
 	cartAppSvc := appservice.NewCartAppSvc(c)
 	replyCartItems, err := cartAppSvc.GetUserCartItems(c.GetInt64("user_id"))
 	if err != nil {
-		app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		if errors.Is(err, errcode.ErrCartWrongUser) {
+			app.NewResponse(c).Error(errcode.ErrCartWrongUser)
+		} else {
+			app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
+		}
 		return
 	}
 
