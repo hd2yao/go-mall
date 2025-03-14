@@ -28,7 +28,7 @@ func main() {
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{"*"} // 允许所有来源，生产环境建议设置具体的域名
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
-	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "go-mall-token", "platform"}
 	config.AllowCredentials = true
 	g.Use(cors.New(config))
 
