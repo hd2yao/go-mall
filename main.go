@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
 	"github.com/hd2yao/go-mall/api/router"
@@ -22,6 +23,15 @@ func main() {
 	}
 
 	g := gin.New()
+
+	// 配置 CORS
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"*"} // 允许所有来源，生产环境建议设置具体的域名
+	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
+	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+	config.AllowCredentials = true
+	g.Use(cors.New(config))
+
 	router.RegisterRoutes(g)
 	server := http.Server{
 		Addr:    ":8080",
