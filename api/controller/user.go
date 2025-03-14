@@ -46,7 +46,7 @@ func RegisterUser(c *gin.Context) {
 	if !util.PasswordComplexityVerify(userRequest.Password) {
 		// Validator 验证通过后再应用 密码复杂度这样的特殊验证
 		logger.New(c).Warn("RegisterUserError", "err", "密码复杂度不满足要求", "password", userRequest.Password)
-		app.NewResponse(c).Error(errcode.ErrParams)
+		app.NewResponse(c).Error(errcode.ErrPasswordComplexity)
 		return
 	}
 

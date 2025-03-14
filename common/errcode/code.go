@@ -21,9 +21,10 @@ var (
 
 // 用户模块相关错误码 10000100 ~ 10000199
 var (
-	ErrUserInvalid      = newError(10000101, "用户异常")
-	ErrUserNameOccupied = newError(10000102, "用户名已被占用")
-	ErrUserNotRight     = newError(10000103, "用户名或密码不正确")
+	ErrUserInvalid        = newError(10000101, "用户异常")
+	ErrUserNameOccupied   = newError(10000102, "用户名已被占用")
+	ErrUserNotRight       = newError(10000103, "用户名或密码不正确")
+	ErrPasswordComplexity = newError(10000104, "密码复杂度不满足要求")
 )
 
 // 商品模块相关错误码 10000200 ~ 1000299
@@ -59,7 +60,7 @@ func (e *AppError) HttpStatusCode() int {
 		return http.StatusOK
 	case ErrServer.Code(), ErrPanic.Code():
 		return http.StatusInternalServerError
-	case ErrParams.Code(), ErrUserInvalid.Code(), ErrUserNameOccupied.Code(), ErrUserNotRight.Code(),
+	case ErrParams.Code(), ErrUserInvalid.Code(), ErrUserNameOccupied.Code(), ErrUserNotRight.Code(), ErrPasswordComplexity.Code(),
 		ErrCommodityNotExists.Code(), ErrCommodityStockOut.Code(), ErrCartItemParam.Code(), ErrOrderParams.Code(),
 		ErrReviewParams.Code(), ErrReviewUnsupportedScene.Code():
 		return http.StatusBadRequest
