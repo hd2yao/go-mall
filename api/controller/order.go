@@ -46,7 +46,7 @@ func UserOrders(c *gin.Context) {
 		app.NewResponse(c).Error(errcode.ErrServer.WithCause(err))
 		return
 	}
-	app.NewResponse(c).Success(replyOrders)
+	app.NewResponse(c).SetPagination(pagination).Success(replyOrders)
 }
 
 // OrderInfo 订单详情

@@ -31,7 +31,10 @@ func (cd *CartDao) GetUserCartItemWithCommodityId(userId, commodityId int64) (*m
 // GetUserCartItems 获取用户购物车里的购物项
 func (cd *CartDao) GetUserCartItems(userId int64) ([]*model.ShoppingCartItem, error) {
 	cartItems := make([]*model.ShoppingCartItem, 0)
-	err := DB().WithContext(cd.ctx).Where(model.ShoppingCartItem{UserId: userId}, "UserId").Find(&cartItems).Error
+	err := DB().WithContext(cd.ctx).
+		Where(model.ShoppingCartItem{UserId: userId}, "UserId").
+		Order("created_at desc").
+		Find(&cartItems).Error
 	return cartItems, err
 }
 
